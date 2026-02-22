@@ -1,4 +1,4 @@
-import magic
+import filetype
 from django.core.exceptions import ValidationError
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
@@ -23,7 +23,8 @@ def validate_resume_file(file):
     header = file.read(2048)
     file.seek(0)
 
-    detected_mime = magic.from_buffer(header, mime=True)
+    kind = filetype.guess(header)
+    detected_mime = kind.mime if kind else "application/octet-stream"
     if detected_mime not in ALLOWED_MIME_TYPES:
         raise ValidationError(
             f"Unsupported file type '{detected_mime}'. Only PDF and DOCX files are accepted."
