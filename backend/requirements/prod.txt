@@ -1,0 +1,6 @@
+-r base.txt
+gunicorn==22.*
+uvicorn[standard]==0.30.*
+whitenoise==6.*
+sentry-sdk==2.*
+python-json-logger==2.*
