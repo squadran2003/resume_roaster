@@ -1,0 +1,27 @@
+{
+  "name": "resume-roaster-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "axios": "^1.7.2",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.31",
+    "vue-router": "^4.3.3",
+    "vuetify": "^3.6.14"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "serve": "^14.2.3",
+    "vite": "^5.3.4",
+    "vite-plugin-vuetify": "^2.0.3",
+    "vitest": "^2.0.3"
+  }
+}
