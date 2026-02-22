@@ -31,7 +31,9 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_S3_ADDRESSING_STYLE = "path"     # required for non-AWS S3-compatible endpoints
 
 # --- Security headers ---
-SECURE_SSL_REDIRECT = True
+# Railway terminates TLS at its proxy; SSL redirect is handled there.
+# Enabling SECURE_SSL_REDIRECT here breaks Railway's internal HTTP health checks.
+SECURE_SSL_REDIRECT = False
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
