@@ -11,7 +11,7 @@ DATABASES = {
         conn_max_age=600,
         # Railway internal connections (.railway.internal) don't use SSL;
         # only require SSL for external/public database URLs.
-        ssl_require="railway.internal" not in _db_url,
+        # ssl_require="railway.internal" not in _db_url,
     )
 }
 
