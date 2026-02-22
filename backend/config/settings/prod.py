@@ -5,7 +5,7 @@ from decouple import config, Csv
 DEBUG = False
 
 _db_url = config("DATABASE_URL")
-print(f"Using database URL: {_db_url}")  # Log the database URL for debugging (remove in production!)
+
 DATABASES = {
     "default": dj_database_url.config(
         default=_db_url,
