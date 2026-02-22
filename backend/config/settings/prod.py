@@ -4,11 +4,14 @@ from decouple import config, Csv
 
 DEBUG = False
 
+_db_url = config("DATABASE_URL")
 DATABASES = {
     "default": dj_database_url.config(
-        default=config("DATABASE_URL"),
+        default=_db_url,
         conn_max_age=600,
-        ssl_require=True,
+        # Railway internal connections (.railway.internal) don't use SSL;
+        # only require SSL for external/public database URLs.
+        ssl_require="railway.internal" not in _db_url,
     )
 }
 
