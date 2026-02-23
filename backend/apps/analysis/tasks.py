@@ -37,9 +37,6 @@ def run_analysis_task(self, analysis_id: str):
         result.save()
     except Exception as exc:
         logger.exception("Analysis task failed for %s", analysis_id)
-        try:
-            raise self.retry(exc=exc)
-        except self.MaxRetriesExceededError:
-            result.status = AnalysisResult.Status.FAILED
-            result.error_message = str(exc)
-            result.save(update_fields=["status", "error_message"])
+        result.status = AnalysisResult.Status.FAILED
+        result.error_message = str(exc)
+        result.save(update_fields=["status", "error_message"])
