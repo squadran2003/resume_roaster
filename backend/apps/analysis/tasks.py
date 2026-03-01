@@ -1,5 +1,6 @@
 import logging
 
+import sentry_sdk
 from celery import shared_task
 from django.utils import timezone
 
@@ -36,6 +37,7 @@ def run_analysis_task(self, analysis_id: str):
         result.completed_at = timezone.now()
         result.save()
     except Exception as exc:
+        sentry_sdk.capture_exception(exc)
         logger.exception("Analysis task failed for %s", analysis_id)
         result.status = AnalysisResult.Status.FAILED
         result.error_message = str(exc)
