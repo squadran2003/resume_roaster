@@ -1,4 +1,2 @@
 [deploy]
 startCommand = "bash start.sh"
-healthcheckPath = "/health/"
-healthcheckTimeout = 60
