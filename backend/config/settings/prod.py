@@ -1,6 +1,24 @@
 from .base import *  # noqa: F401, F403
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
 import dj_database_url
 from decouple import config, Csv
+
+_sentry_dsn = config("SENTRY_DSN", default="")
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        integrations=[
+            DjangoIntegration(),
+            CeleryIntegration(),
+            RedisIntegration(),
+        ],
+        traces_sample_rate=0.1,   # capture 10 % of transactions for performance
+        send_default_pii=False,   # never send PII to Sentry
+        environment="production",
+    )
 
 DEBUG = False
 
@@ -77,19 +95,23 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "json",
         },
+        "sentry": {
+            "level": "ERROR",
+            "class": "sentry_sdk.integrations.logging.EventHandler",
+        },
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["console", "sentry"],
         "level": "WARNING",
     },
     "loggers": {
         "django": {
-            "handlers": ["console"],
+            "handlers": ["console", "sentry"],
             "level": "WARNING",
             "propagate": False,
         },
         "apps": {
-            "handlers": ["console"],
+            "handlers": ["console", "sentry"],
             "level": "WARNING",
             "propagate": False,
         },
