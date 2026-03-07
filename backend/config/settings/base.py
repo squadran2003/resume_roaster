@@ -128,6 +128,13 @@ STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_UPLOAD_PRICE_USD = config("STRIPE_UPLOAD_PRICE_USD", default="2.00")
 STRIPE_CURRENCY = config("STRIPE_CURRENCY", default="usd")
 
+# Credit packs: list of (credits, price_in_cents, label)
+CREDIT_PACKS = [
+    {"credits": 3, "price_cents": 900, "label": "Starter — 3 credits"},
+    {"credits": 10, "price_cents": 2000, "label": "Popular — 10 credits"},
+    {"credits": 25, "price_cents": 4000, "label": "Power — 25 credits"},
+]
+
 # --- Celery ---
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")

@@ -20,7 +20,9 @@ const routes = [
   { path: '/dashboard', component: () => import('../views/DashboardView.vue') },
   { path: '/upload', component: () => import('../views/UploadResumeView.vue') },
   { path: '/analysis/new', component: () => import('../views/NewAnalysisView.vue') },
+  { path: '/analysis/compare', component: () => import('../views/CompareView.vue') },
   { path: '/analysis/:id', component: () => import('../views/AnalysisResultView.vue') },
+  { path: '/linkedin', component: () => import('../views/LinkedInView.vue') },
   { path: '/account', component: () => import('../views/AccountView.vue') },
 ]
 

@@ -7,8 +7,10 @@ const MAX_POLL_ATTEMPTS = 60
 
 export const useAnalysisStore = defineStore('analysis', () => {
   const current = ref(null)
+  const analyses = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const pagination = ref({ count: 0, next: null, previous: null })
 
   async function submitAnalysis(resumeId, jobDescription, jobTitle, company) {
     loading.value = true
@@ -26,6 +28,20 @@ export const useAnalysisStore = defineStore('analysis', () => {
     } catch (e) {
       error.value = e.response?.data?.detail || 'Failed to submit analysis.'
       throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchAnalyses(page = 1) {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await analysisApi.list(page)
+      analyses.value = data.results
+      pagination.value = { count: data.count, next: data.next, previous: data.previous }
+    } catch (e) {
+      error.value = 'Failed to load analysis history.'
     } finally {
       loading.value = false
     }
@@ -54,5 +70,29 @@ export const useAnalysisStore = defineStore('analysis', () => {
     })
   }
 
-  return { current, loading, error, submitAnalysis, pollAnalysis }
+  function pollField(id, field) {
+    let attempts = 0
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(async () => {
+        attempts++
+        try {
+          const { data } = await analysisApi.get(id)
+          current.value = data
+          const val = data[field]
+          if ((Array.isArray(val) && val.length > 0) || (typeof val === 'string' && val.length > 0)) {
+            clearInterval(interval)
+            resolve(data)
+          } else if (attempts >= MAX_POLL_ATTEMPTS) {
+            clearInterval(interval)
+            reject(new Error('Generation timed out.'))
+          }
+        } catch (e) {
+          clearInterval(interval)
+          reject(e)
+        }
+      }, POLL_INTERVAL_MS)
+    })
+  }
+
+  return { current, analyses, loading, error, pagination, submitAnalysis, fetchAnalyses, pollAnalysis, pollField }
 })

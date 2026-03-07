@@ -9,16 +9,15 @@
         <v-list lines="two">
           <v-list-item prepend-icon="mdi-email" title="Email" :subtitle="auth.user?.email || '—'" />
           <v-list-item
-            prepend-icon="mdi-star"
-            title="Plan"
-            :subtitle="auth.user?.profile?.subscription_tier || 'Free'"
-          />
-          <v-list-item
-            prepend-icon="mdi-currency-usd"
+            prepend-icon="mdi-star-circle"
             title="Credits"
-            :subtitle="String(auth.user?.profile?.credits_remaining ?? 0)"
+            :subtitle="`${auth.user?.profile?.credits_remaining ?? 0} remaining`"
           />
         </v-list>
+
+        <v-btn color="success" variant="flat" class="mb-4" prepend-icon="mdi-plus" to="/dashboard">
+          Buy More Credits
+        </v-btn>
 
         <v-divider class="my-4" />
 

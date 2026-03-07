@@ -30,7 +30,39 @@ def create_upload_checkout_session(resume, success_url: str, cancel_url: str) ->
         mode="payment",
         success_url=success_url,
         cancel_url=cancel_url,
-        # Store resume_id in metadata so the webhook can mark it paid
         metadata={"resume_id": str(resume.id)},
+    )
+    return session.url
+
+
+def create_credit_checkout_session(user, pack, success_url: str, cancel_url: str) -> str:
+    """
+    Create a Stripe Checkout Session for a credit pack purchase.
+    Returns the hosted checkout URL.
+    """
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[
+            {
+                "price_data": {
+                    "currency": settings.STRIPE_CURRENCY,
+                    "unit_amount": pack["price_cents"],
+                    "product_data": {
+                        "name": pack["label"],
+                        "description": f"{pack['credits']} analysis credits",
+                    },
+                },
+                "quantity": 1,
+            }
+        ],
+        mode="payment",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "type": "credit_purchase",
+            "user_id": str(user.id),
+            "credits": str(pack["credits"]),
+            "price_cents": str(pack["price_cents"]),
+        },
     )
     return session.url

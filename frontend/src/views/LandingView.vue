@@ -11,7 +11,7 @@
         </h1>
         <p class="hero-subtitle mx-auto mb-8">
           Upload your resume and a job description. Our AI scores the match, rewrites weak bullets,
-          flags ATS issues, and generates a tailored cover letter — in seconds.
+          maps keyword gaps, generates a cover letter, and even rewrites your entire resume — in seconds.
         </p>
         <div class="d-flex justify-center gap-4 flex-wrap">
           <v-btn
@@ -33,7 +33,7 @@
             Sign In
           </v-btn>
         </div>
-        <p class="mt-4 text-medium-emphasis text-body-2">No credit card required to get started.</p>
+        <p class="mt-4 text-medium-emphasis text-body-2">1 free credit on signup — no credit card required.</p>
       </v-container>
     </section>
 
@@ -42,7 +42,7 @@
       <v-container>
         <div class="text-center mb-12">
           <h2 class="text-h4 font-weight-bold mb-2">Everything you need to land the role</h2>
-          <p class="text-medium-emphasis">Four powerful tools, one upload.</p>
+          <p class="text-medium-emphasis">Seven powerful tools, one upload.</p>
         </div>
         <v-row justify="center" class="ga-4">
           <v-col cols="12" sm="6" md="3" v-for="feature in features" :key="feature.title">
@@ -171,25 +171,43 @@ const features = [
     icon: 'mdi-chart-bar',
     color: 'orange-darken-2',
     title: 'Match Score',
-    description: 'Get a 0–100 compatibility score showing how well your resume aligns with the job description.',
+    description: 'Get a 0-100 compatibility score showing how well your resume aligns with the job description.',
   },
   {
-    icon: 'mdi-pencil-outline',
-    color: 'blue-darken-2',
-    title: 'Bullet Rewriter',
-    description: 'Weak bullets are rewritten with strong action verbs and measurable outcomes that grab attention.',
+    icon: 'mdi-fire',
+    color: 'red-darken-2',
+    title: 'Keyword Heatmap',
+    description: 'See exactly which JD keywords are in your resume and which are missing — color-coded and actionable.',
+  },
+  {
+    icon: 'mdi-file-document-edit-outline',
+    color: 'deep-purple-darken-2',
+    title: 'Full Resume Rewrite',
+    description: 'Get your entire resume rewritten and optimized for the job. Download as a formatted PDF.',
+  },
+  {
+    icon: 'mdi-account-question',
+    color: 'indigo-darken-2',
+    title: 'Interview Prep',
+    description: 'AI generates likely interview questions with STAR answer frameworks based on the JD and your resume gaps.',
   },
   {
     icon: 'mdi-robot-outline',
     color: 'purple-darken-2',
     title: 'ATS Checker',
-    description: "Missing keywords, formatting problems, and non-standard headers are flagged before they knock you out.",
+    description: 'Missing keywords, formatting problems, and non-standard headers are flagged before they knock you out.',
   },
   {
-    icon: 'mdi-file-document-edit-outline',
-    color: 'green-darken-2',
-    title: 'Cover Letter',
-    description: 'A tailored cover letter is generated for each job — ready to send, easy to edit.',
+    icon: 'mdi-email-multiple',
+    color: 'teal-darken-2',
+    title: 'Email Templates',
+    description: 'Follow-up, thank you, and outreach emails personalized to the company and role.',
+  },
+  {
+    icon: 'mdi-linkedin',
+    color: 'blue-darken-3',
+    title: 'LinkedIn Optimizer',
+    description: 'Optimize your headline, About section, and skills for recruiter search visibility.',
   },
 ]
 
@@ -204,7 +222,7 @@ const steps = [
   },
   {
     title: 'Get your report',
-    description: 'In seconds you receive a match score, rewritten bullets, ATS flags, and a ready-to-send cover letter.',
+    description: 'In seconds you get a match score, keyword heatmap, rewritten bullets, ATS flags, cover letter, and email templates.',
   },
 ]
 </script>
