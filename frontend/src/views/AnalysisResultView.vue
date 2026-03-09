@@ -356,13 +356,14 @@ async function requestInterviewPrep() {
       showInterview.value = true
     } else {
       interviewPolling.value = true
-      await analysisStore.pollField(route.params.id, 'interview_questions')
+      const prevError = analysis.value?.error_message || ''
+      await analysisStore.pollField(route.params.id, 'interview_questions', prevError)
       interviewPolling.value = false
       showInterview.value = true
     }
     await authStore.fetchMe()
   } catch (e) {
-    interviewError.value = e.response?.data?.detail || 'Failed to generate questions.'
+    interviewError.value = e.response?.data?.detail || e.message || 'Failed to generate questions.'
     interviewPolling.value = false
   } finally {
     interviewLoading.value = false

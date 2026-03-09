@@ -223,11 +223,23 @@ def run_resume_rewrite(resume_text: str, jd_text: str) -> str:
 def run_interview_prep(resume_text: str, jd_text: str) -> list:
     """Return a list of interview question dicts."""
     prompt = build_interview_prep_prompt(resume_text, jd_text)
-    raw = _call_ai(prompt)
+    raw = _call_ai(prompt, json_mode=False)
     raw = _strip_fences(raw)
+    logger.info("Interview prep raw AI response (first 500 chars): %s", raw[:500])
     try:
         data = json.loads(raw)
-        return data if isinstance(data, list) else data.get("questions", [])
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
+            # OpenAI json_mode returns an object — extract the first list value
+            for val in data.values():
+                if isinstance(val, list):
+                    return val
+            # OpenAI returned a single question object — wrap it
+            if "question" in data:
+                return [data]
+        logger.error("AI returned unexpected structure for interview prep: %s", str(data)[:300])
+        raise ValueError("AI returned an unexpected JSON structure")
     except json.JSONDecodeError:
         logger.error("AI returned non-JSON for interview prep (first 300 chars): %s", raw[:300])
         raise ValueError("AI returned a non-JSON response")

@@ -11,7 +11,7 @@
           <div class="text-body-2 text-medium-emphasis">Each analysis costs 1 credit. Resume rewrite and interview prep cost 1 credit each.</div>
         </div>
         <v-spacer />
-        <v-btn color="success" variant="flat" prepend-icon="mdi-plus" @click="showBuyDialog = true">
+        <v-btn color="success" variant="flat" prepend-icon="mdi-plus" @click="selectedPackIndex = null; showBuyDialog = true">
           Buy Credits
         </v-btn>
       </div>
@@ -174,8 +174,10 @@
             <v-list-item
               v-for="(pack, i) in paymentStore.packs"
               :key="i"
-              @click="paymentStore.buyCreditPack(i)"
+              @click="selectedPackIndex = i"
               :disabled="paymentStore.loading"
+              :active="selectedPackIndex === i"
+              active-color="success"
               class="mb-2"
               rounded="lg"
               border
@@ -185,15 +187,21 @@
               </template>
               <v-list-item-title class="font-weight-bold">{{ pack.label }}</v-list-item-title>
               <v-list-item-subtitle>${{ (pack.price_cents / 100).toFixed(2) }}</v-list-item-subtitle>
-              <template #append>
-                <v-btn size="small" color="success" variant="flat" :loading="paymentStore.loading">Buy</v-btn>
-              </template>
             </v-list-item>
           </v-list>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="showBuyDialog = false">Close</v-btn>
+          <v-btn @click="showBuyDialog = false">Cancel</v-btn>
+          <v-btn
+            color="success"
+            variant="flat"
+            :disabled="selectedPackIndex === null"
+            :loading="paymentStore.loading"
+            @click="paymentStore.buyCreditPack(selectedPackIndex)"
+          >
+            Buy Now
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -234,9 +242,11 @@ const deleteDialog = ref(false)
 const selectedResume = ref(null)
 const deleting = ref(false)
 const showBuyDialog = ref(false)
+const selectedPackIndex = ref(null)
 const compareIds = ref([])
 
 onMounted(() => {
+  authStore.fetchMe()
   resumeStore.fetchResumes()
   analysisStore.fetchAnalyses()
   paymentStore.fetchPacks()

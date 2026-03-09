@@ -70,7 +70,7 @@ export const useAnalysisStore = defineStore('analysis', () => {
     })
   }
 
-  function pollField(id, field) {
+  function pollField(id, field, prevErrorMessage = '') {
     let attempts = 0
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
@@ -82,6 +82,9 @@ export const useAnalysisStore = defineStore('analysis', () => {
           if ((Array.isArray(val) && val.length > 0) || (typeof val === 'string' && val.length > 0)) {
             clearInterval(interval)
             resolve(data)
+          } else if (data.error_message && data.error_message !== prevErrorMessage) {
+            clearInterval(interval)
+            reject(new Error(data.error_message))
           } else if (attempts >= MAX_POLL_ATTEMPTS) {
             clearInterval(interval)
             reject(new Error('Generation timed out.'))

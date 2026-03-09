@@ -101,6 +101,8 @@ def run_interview_prep_task(self, analysis_id: str):
     except Exception as exc:
         sentry_sdk.capture_exception(exc)
         logger.exception("Interview prep task failed for %s", analysis_id)
+        result.error_message = _safe_error_message(exc)
+        result.save(update_fields=["error_message"])
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=30)

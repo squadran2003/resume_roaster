@@ -68,7 +68,7 @@ async function submit() {
   loading.value = true
   error.value = null
   try {
-    await authApi.register({ email: email.value, password: password.value, password2: password2.value })
+    await authApi.register({ email: email.value, password: password.value, password_confirm: password2.value })
     success.value = true
   } catch (e) {
     const data = e.response?.data

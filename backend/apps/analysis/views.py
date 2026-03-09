@@ -252,6 +252,11 @@ class InterviewPrepView(APIView):
                 status=status.HTTP_402_PAYMENT_REQUIRED,
             )
 
+        # Clear any previous error so polling can detect new failures
+        if result.error_message:
+            result.error_message = ""
+            result.save(update_fields=["error_message"])
+
         run_interview_prep_task.delay(str(result.id))
         return Response({"detail": "Interview prep generation started."}, status=status.HTTP_202_ACCEPTED)
 
