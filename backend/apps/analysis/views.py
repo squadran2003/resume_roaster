@@ -1,4 +1,3 @@
-import html as html_mod
 import logging
 import uuid as uuid_mod
 
@@ -184,45 +183,39 @@ class ResumeRewritePDFView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        try:
-            from weasyprint import HTML
-        except ImportError:
-            logger.error("weasyprint not installed")
-            return Response(
-                {"detail": "PDF generation is not available."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+        from fpdf import FPDF
 
-        # Build simple HTML from the plain text rewrite
+        pdf_doc = FPDF()
+        pdf_doc.set_auto_page_break(auto=True, margin=25)
+        pdf_doc.add_page()
+
         lines = result.rewritten_resume_text.split("\n")
-        html_lines = []
         for line in lines:
-            stripped = html_mod.escape(line.strip())
+            stripped = line.strip()
             if not stripped:
-                html_lines.append("<br>")
+                pdf_doc.ln(4)
             elif stripped.isupper() and len(stripped) < 60:
-                html_lines.append(f"<h2 style='color:#1a1a2e;border-bottom:2px solid #e64a19;padding-bottom:4px;margin-top:18px;'>{stripped}</h2>")
+                pdf_doc.ln(6)
+                pdf_doc.set_font("Helvetica", "B", 13)
+                pdf_doc.set_text_color(26, 26, 46)
+                pdf_doc.cell(0, 7, stripped, new_x="LMARGIN", new_y="NEXT")
+                # Draw underline
+                pdf_doc.set_draw_color(230, 74, 25)
+                pdf_doc.set_line_width(0.5)
+                y = pdf_doc.get_y()
+                pdf_doc.line(10, y, 200, y)
+                pdf_doc.ln(3)
             elif stripped.startswith("- ") or stripped.startswith("* "):
-                html_lines.append(f"<li>{stripped[2:]}</li>")
+                pdf_doc.set_font("Helvetica", "", 10)
+                pdf_doc.set_text_color(34, 34, 34)
+                pdf_doc.set_x(18)
+                pdf_doc.multi_cell(0, 5, f"\u2022 {stripped[2:]}")
             else:
-                html_lines.append(f"<p style='margin:2px 0;'>{stripped}</p>")
+                pdf_doc.set_font("Helvetica", "", 10)
+                pdf_doc.set_text_color(34, 34, 34)
+                pdf_doc.multi_cell(0, 5, stripped)
 
-        body = "\n".join(html_lines)
-        html_content = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8">
-<style>
-  body {{ font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11pt; line-height: 1.5;
-         margin: 40px; color: #222; }}
-  h2 {{ font-size: 13pt; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }}
-  li {{ margin-left: 20px; margin-bottom: 3px; }}
-  p {{ margin: 3px 0; }}
-</style>
-</head>
-<body>{body}</body>
-</html>"""
-
-        pdf = HTML(string=html_content).write_pdf()
+        pdf = pdf_doc.output()
         jd_title = result.job_description.title or "tailored"
         filename = slugify(f"resume-{jd_title}")[:60] + ".pdf"
 
