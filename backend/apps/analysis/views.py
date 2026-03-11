@@ -183,43 +183,64 @@ class ResumeRewritePDFView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        import re
         from fpdf import FPDF
 
+        def strip_unsupported_chars(text):
+            """Remove emojis and other non-Latin1 characters unsupported by Helvetica."""
+            return re.sub(r'[^\x00-\xFF]', '', text).strip()
+
         pdf_doc = FPDF()
-        pdf_doc.set_auto_page_break(auto=True, margin=25)
+        pdf_doc.set_margins(left=15, top=15, right=15)
+        pdf_doc.set_auto_page_break(auto=True, margin=20)
         pdf_doc.add_page()
 
+        bullet_indent = 8
+
         lines = result.rewritten_resume_text.split("\n")
+        is_first_line = True
         for line in lines:
-            stripped = line.strip()
+            stripped = strip_unsupported_chars(line)
             if not stripped:
                 pdf_doc.ln(4)
+                continue
+
+            if is_first_line:
+                # Name line — centered, large
+                pdf_doc.set_font("Helvetica", "B", 16)
+                pdf_doc.set_text_color(26, 26, 46)
+                pdf_doc.set_x(pdf_doc.l_margin)
+                pdf_doc.cell(0, 8, stripped, align="C", new_x="LMARGIN", new_y="NEXT")
+                is_first_line = False
             elif stripped.isupper() and len(stripped) < 60:
                 pdf_doc.ln(6)
                 pdf_doc.set_font("Helvetica", "B", 13)
                 pdf_doc.set_text_color(26, 26, 46)
+                pdf_doc.set_x(pdf_doc.l_margin)
                 pdf_doc.cell(0, 7, stripped, new_x="LMARGIN", new_y="NEXT")
                 # Draw underline
                 pdf_doc.set_draw_color(230, 74, 25)
                 pdf_doc.set_line_width(0.5)
                 y = pdf_doc.get_y()
-                pdf_doc.line(10, y, 200, y)
+                pdf_doc.line(pdf_doc.l_margin, y, pdf_doc.w - pdf_doc.r_margin, y)
                 pdf_doc.ln(3)
             elif stripped.startswith("- ") or stripped.startswith("* "):
                 pdf_doc.set_font("Helvetica", "", 10)
                 pdf_doc.set_text_color(34, 34, 34)
-                pdf_doc.set_x(18)
-                pdf_doc.multi_cell(0, 5, f"\u2022 {stripped[2:]}")
+                pdf_doc.set_x(pdf_doc.l_margin + bullet_indent)
+                pdf_doc.multi_cell(0, 5, f"- {stripped[2:]}")
             else:
                 pdf_doc.set_font("Helvetica", "", 10)
                 pdf_doc.set_text_color(34, 34, 34)
+                pdf_doc.set_x(pdf_doc.l_margin)
                 pdf_doc.multi_cell(0, 5, stripped)
 
-        pdf = pdf_doc.output()
+        pdf_bytes = bytes(pdf_doc.output())
         jd_title = result.job_description.title or "tailored"
         filename = slugify(f"resume-{jd_title}")[:60] + ".pdf"
 
-        response = HttpResponse(pdf, content_type="application/pdf")
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Length"] = len(pdf_bytes)
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
