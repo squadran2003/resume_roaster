@@ -118,6 +118,9 @@ ANTHROPIC_MODEL = config("ANTHROPIC_MODEL", default="claude-sonnet-4-6")
 OPENAI_API_KEY = config("OPENAI_API_KEY", default="")
 OPENAI_MODEL = config("OPENAI_MODEL", default="gpt-4o")
 
+# --- Feature flags ---
+PAYMENTS_ENABLED = config("PAYMENTS_ENABLED", default=False, cast=bool)
+
 # --- Frontend origin (used for Stripe redirect URLs) ---
 FRONTEND_ORIGIN = config("FRONTEND_ORIGIN", default="http://localhost:5173")
 

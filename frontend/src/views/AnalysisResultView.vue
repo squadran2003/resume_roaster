@@ -184,7 +184,7 @@
             </template>
             <template v-else>
               <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-creation" @click="requestRewrite" :loading="rewriteLoading">
-                Generate Rewrite (1 credit)
+                {{ authStore.paymentsEnabled ? 'Generate Rewrite (1 credit)' : 'Generate Rewrite' }}
               </v-btn>
             </template>
             <v-alert v-if="rewriteError" type="error" density="compact" class="mt-2">{{ rewriteError }}</v-alert>
@@ -212,7 +212,7 @@
             </template>
             <template v-else>
               <v-btn color="indigo" variant="flat" prepend-icon="mdi-creation" @click="requestInterviewPrep" :loading="interviewLoading">
-                Generate Questions (1 credit)
+                {{ authStore.paymentsEnabled ? 'Generate Questions (1 credit)' : 'Generate Questions' }}
               </v-btn>
             </template>
             <v-alert v-if="interviewError" type="error" density="compact" class="mt-2">{{ interviewError }}</v-alert>

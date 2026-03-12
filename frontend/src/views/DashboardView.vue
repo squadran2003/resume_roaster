@@ -1,7 +1,7 @@
 <template>
   <v-container class="py-8">
     <!-- Credits banner -->
-    <v-card elevation="2" rounded="lg" class="mb-6 pa-4">
+    <v-card v-if="authStore.paymentsEnabled" elevation="2" rounded="lg" class="mb-6 pa-4">
       <div class="d-flex align-center flex-wrap ga-4">
         <div>
           <div class="text-h6 font-weight-bold">
@@ -163,7 +163,7 @@
     </v-dialog>
 
     <!-- Buy Credits dialog -->
-    <v-dialog v-model="showBuyDialog" max-width="500">
+    <v-dialog v-if="authStore.paymentsEnabled" v-model="showBuyDialog" max-width="500">
       <v-card>
         <v-card-title class="pt-6 text-h6 font-weight-bold">Buy Credits</v-card-title>
         <v-card-text>
@@ -245,11 +245,11 @@ const showBuyDialog = ref(false)
 const selectedPackIndex = ref(null)
 const compareIds = ref([])
 
-onMounted(() => {
-  authStore.fetchMe()
+onMounted(async () => {
+  await authStore.fetchMe()
   resumeStore.fetchResumes()
   analysisStore.fetchAnalyses()
-  paymentStore.fetchPacks()
+  if (authStore.paymentsEnabled) paymentStore.fetchPacks()
 })
 
 function confirmDelete(item) {

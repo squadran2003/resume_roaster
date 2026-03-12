@@ -11,7 +11,7 @@
       <v-card-title class="pt-6 text-h6 font-weight-bold">Optimize Your LinkedIn</v-card-title>
       <v-card-text>
         <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
-        <v-alert type="info" variant="tonal" density="compact" class="mb-4">
+        <v-alert v-if="authStore.paymentsEnabled" type="info" variant="tonal" density="compact" class="mb-4">
           Costs 1 credit. Paste your current LinkedIn headline and About section, plus the job description you're targeting.
         </v-alert>
         <v-form @submit.prevent="submit">
@@ -46,7 +46,7 @@
             :loading="loading"
             :disabled="!headline || !about || !jdText"
           >
-            Optimize LinkedIn (1 credit)
+            {{ authStore.paymentsEnabled ? 'Optimize LinkedIn (1 credit)' : 'Optimize LinkedIn' }}
           </v-btn>
         </v-form>
       </v-card-text>

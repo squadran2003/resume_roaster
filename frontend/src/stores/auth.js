@@ -7,6 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
 
   const isAuthenticated = computed(() => !!accessToken.value)
+  const paymentsEnabled = computed(() => user.value?.payments_enabled ?? false)
 
   async function login(email, password) {
     const { data } = await authApi.login({ email, password })
@@ -35,5 +36,5 @@ export const useAuthStore = defineStore('auth', () => {
     fetchMe().catch(logout)
   }
 
-  return { accessToken, user, isAuthenticated, login, logout, fetchMe }
+  return { accessToken, user, isAuthenticated, paymentsEnabled, login, logout, fetchMe }
 })

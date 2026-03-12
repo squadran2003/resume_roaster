@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from .models import User, Profile
@@ -37,8 +38,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class MeSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
+    payments_enabled = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name", "date_joined", "is_staff", "profile")
+        fields = ("id", "email", "first_name", "last_name", "date_joined", "is_staff", "profile", "payments_enabled")
         read_only_fields = ("id", "email", "date_joined", "is_staff")
+
+    def get_payments_enabled(self, obj):
+        return settings.PAYMENTS_ENABLED

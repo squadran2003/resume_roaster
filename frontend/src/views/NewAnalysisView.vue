@@ -3,7 +3,7 @@
     <v-card width="680" elevation="4" rounded="lg">
       <v-card-title class="pt-6 text-h5 font-weight-bold">New Analysis</v-card-title>
       <v-card-text>
-        <v-alert v-if="credits < 1 && !isAdmin" type="warning" density="compact" class="mb-4">
+        <v-alert v-if="authStore.paymentsEnabled && credits < 1 && !isAdmin" type="warning" density="compact" class="mb-4">
           You have no credits remaining.
           <router-link to="/dashboard">Buy more credits</router-link> to run an analysis.
         </v-alert>
@@ -50,9 +50,9 @@
             block
             size="large"
             :loading="loading"
-            :disabled="!selectedResume || !jobDescription || (credits < 1 && !isAdmin)"
+            :disabled="!selectedResume || !jobDescription || (authStore.paymentsEnabled && credits < 1 && !isAdmin)"
           >
-            Analyze Resume (1 credit)
+            {{ authStore.paymentsEnabled ? 'Analyze Resume (1 credit)' : 'Analyze Resume' }}
           </v-btn>
         </v-form>
       </v-card-text>

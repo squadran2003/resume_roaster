@@ -1,6 +1,7 @@
 import logging
 import uuid as uuid_mod
 
+from django.conf import settings as django_settings
 from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -35,9 +36,9 @@ class AnalysisCreateView(APIView):
 
         resume = get_object_or_404(Resume, id=d["resume_id"], user=request.user)
 
-        # Credit check: staff bypass, otherwise deduct 1 credit
-        profile = request.user.profile
-        if not request.user.is_staff:
+        # Credit check: skip when payments disabled or staff
+        if django_settings.PAYMENTS_ENABLED and not request.user.is_staff:
+            profile = request.user.profile
             if profile.credits_remaining < 1:
                 return Response(
                     {"detail": "No credits remaining. Please purchase more credits."},
@@ -135,7 +136,11 @@ class AnalysisCompareView(APIView):
 
 
 def _deduct_credit(user):
-    """Atomically deduct 1 credit. Returns True on success, False if insufficient."""
+    """Atomically deduct 1 credit. Returns True on success, False if insufficient.
+    Always succeeds when payments are disabled."""
+    if not django_settings.PAYMENTS_ENABLED:
+        return True
+
     from apps.accounts.models import Profile
 
     updated = Profile.objects.filter(

@@ -9,13 +9,14 @@
         <v-list lines="two">
           <v-list-item prepend-icon="mdi-email" title="Email" :subtitle="auth.user?.email || '—'" />
           <v-list-item
+            v-if="auth.paymentsEnabled"
             prepend-icon="mdi-star-circle"
             title="Credits"
             :subtitle="`${auth.user?.profile?.credits_remaining ?? 0} remaining`"
           />
         </v-list>
 
-        <v-btn color="success" variant="flat" class="mb-4" prepend-icon="mdi-plus" to="/dashboard">
+        <v-btn v-if="auth.paymentsEnabled" color="success" variant="flat" class="mb-4" prepend-icon="mdi-plus" to="/dashboard">
           Buy More Credits
         </v-btn>
 

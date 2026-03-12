@@ -18,6 +18,7 @@ if _sentry_dsn:
         traces_sample_rate=0.1,   # capture 10 % of transactions for performance
         send_default_pii=False,   # never send PII to Sentry
         environment="production",
+        enable_logs=True,
     )
 
 DEBUG = False
