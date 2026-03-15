@@ -120,6 +120,7 @@ OPENAI_MODEL = config("OPENAI_MODEL", default="gpt-4o")
 
 # --- Feature flags ---
 PAYMENTS_ENABLED = config("PAYMENTS_ENABLED", default=False, cast=bool)
+FREE_DAILY_ANALYSIS_LIMIT = config("FREE_DAILY_ANALYSIS_LIMIT", default=3, cast=int)
 
 # --- Frontend origin (used for Stripe redirect URLs) ---
 FRONTEND_ORIGIN = config("FRONTEND_ORIGIN", default="http://localhost:5173")

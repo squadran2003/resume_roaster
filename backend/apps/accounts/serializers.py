@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
+from django.utils import timezone
 from rest_framework import serializers
 from .models import User, Profile
 
@@ -39,11 +40,30 @@ class ProfileSerializer(serializers.ModelSerializer):
 class MeSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
     payments_enabled = serializers.SerializerMethodField()
+    daily_analyses_used = serializers.SerializerMethodField()
+    daily_analyses_limit = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name", "date_joined", "is_staff", "profile", "payments_enabled")
+        fields = ("id", "email", "first_name", "last_name", "date_joined", "is_staff", "profile", "payments_enabled", "daily_analyses_used", "daily_analyses_limit")
         read_only_fields = ("id", "email", "date_joined", "is_staff")
 
     def get_payments_enabled(self, obj):
         return settings.PAYMENTS_ENABLED
+
+    def get_daily_analyses_used(self, obj):
+        if settings.PAYMENTS_ENABLED:
+            return None
+        from apps.analysis.models import AnalysisResult, LinkedInAnalysis
+        since = timezone.now() - timezone.timedelta(hours=24)
+        count = AnalysisResult.objects.filter(
+            resume__user=obj, created_at__gte=since
+        ).count() + LinkedInAnalysis.objects.filter(
+            user=obj, created_at__gte=since
+        ).count()
+        return count
+
+    def get_daily_analyses_limit(self, obj):
+        if settings.PAYMENTS_ENABLED:
+            return None
+        return settings.FREE_DAILY_ANALYSIS_LIMIT

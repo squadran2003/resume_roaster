@@ -17,6 +17,19 @@
       </div>
     </v-card>
 
+    <!-- Daily usage banner (free mode) -->
+    <v-card v-if="!authStore.paymentsEnabled && !isAdmin" elevation="2" rounded="lg" class="mb-6 pa-4">
+      <div class="d-flex align-center flex-wrap ga-4">
+        <div>
+          <div class="text-h6 font-weight-bold">
+            <v-icon icon="mdi-lightning-bolt" color="primary" class="mr-1" />
+            {{ dailyRemaining }} of {{ dailyLimit }} free analyses remaining today
+          </div>
+          <div class="text-body-2 text-medium-emphasis">Your limit resets on a rolling 24-hour basis.</div>
+        </div>
+      </div>
+    </v-card>
+
     <!-- Quick actions -->
     <div class="d-flex align-center mb-6 flex-wrap ga-3">
       <h1 class="text-h4 font-weight-bold">Dashboard</h1>
@@ -221,6 +234,9 @@ const paymentStore = usePaymentStore()
 const authStore = useAuthStore()
 
 const credits = computed(() => authStore.user?.profile?.credits_remaining ?? 0)
+const isAdmin = computed(() => authStore.user?.is_staff)
+const dailyLimit = computed(() => authStore.user?.daily_analyses_limit ?? 3)
+const dailyRemaining = computed(() => dailyLimit.value - (authStore.user?.daily_analyses_used ?? 0))
 
 const resumeHeaders = [
   { title: 'File', key: 'original_filename' },

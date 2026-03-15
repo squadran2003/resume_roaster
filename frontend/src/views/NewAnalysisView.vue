@@ -7,6 +7,12 @@
           You have no credits remaining.
           <router-link to="/dashboard">Buy more credits</router-link> to run an analysis.
         </v-alert>
+        <v-alert v-if="!authStore.paymentsEnabled && !isAdmin && dailyRemaining <= 0" type="warning" density="compact" class="mb-4">
+          You've used all {{ dailyLimit }} free analyses for today. Try again in 24 hours.
+        </v-alert>
+        <v-alert v-else-if="!authStore.paymentsEnabled && !isAdmin" type="info" variant="tonal" density="compact" class="mb-4">
+          {{ dailyRemaining }} of {{ dailyLimit }} free analyses remaining today
+        </v-alert>
         <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
         <v-form @submit.prevent="submit">
           <v-select
@@ -50,7 +56,7 @@
             block
             size="large"
             :loading="loading"
-            :disabled="!selectedResume || !jobDescription || (authStore.paymentsEnabled && credits < 1 && !isAdmin)"
+            :disabled="!selectedResume || !jobDescription || (authStore.paymentsEnabled && credits < 1 && !isAdmin) || (!authStore.paymentsEnabled && !isAdmin && dailyRemaining <= 0)"
           >
             {{ authStore.paymentsEnabled ? 'Analyze Resume (1 credit)' : 'Analyze Resume' }}
           </v-btn>
@@ -82,6 +88,8 @@ const error = ref(null)
 
 const isAdmin = computed(() => authStore.user?.is_staff)
 const credits = computed(() => authStore.user?.profile?.credits_remaining ?? 0)
+const dailyLimit = computed(() => authStore.user?.daily_analyses_limit ?? 3)
+const dailyRemaining = computed(() => dailyLimit.value - (authStore.user?.daily_analyses_used ?? 0))
 
 const rules = {
   required: (v) => !!v || 'Job description is required.',

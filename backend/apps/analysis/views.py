@@ -5,6 +5,7 @@ from django.conf import settings as django_settings
 from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
@@ -36,24 +37,31 @@ class AnalysisCreateView(APIView):
 
         resume = get_object_or_404(Resume, id=d["resume_id"], user=request.user)
 
-        # Credit check: skip when payments disabled or staff
-        if django_settings.PAYMENTS_ENABLED and not request.user.is_staff:
-            profile = request.user.profile
-            if profile.credits_remaining < 1:
-                return Response(
-                    {"detail": "No credits remaining. Please purchase more credits."},
-                    status=status.HTTP_402_PAYMENT_REQUIRED,
-                )
-            # Atomically deduct credit
-            updated = type(profile).objects.filter(
-                pk=profile.pk, credits_remaining__gte=1
-            ).update(credits_remaining=models.F("credits_remaining") - 1)
-            if not updated:
-                return Response(
-                    {"detail": "No credits remaining. Please purchase more credits."},
-                    status=status.HTTP_402_PAYMENT_REQUIRED,
-                )
-            profile.refresh_from_db()
+        # Usage check: skip for staff/superusers
+        if not request.user.is_staff:
+            if django_settings.PAYMENTS_ENABLED:
+                profile = request.user.profile
+                if profile.credits_remaining < 1:
+                    return Response(
+                        {"detail": "No credits remaining. Please purchase more credits."},
+                        status=status.HTTP_402_PAYMENT_REQUIRED,
+                    )
+                updated = type(profile).objects.filter(
+                    pk=profile.pk, credits_remaining__gte=1
+                ).update(credits_remaining=models.F("credits_remaining") - 1)
+                if not updated:
+                    return Response(
+                        {"detail": "No credits remaining. Please purchase more credits."},
+                        status=status.HTTP_402_PAYMENT_REQUIRED,
+                    )
+                profile.refresh_from_db()
+            else:
+                allowed, used, limit = _check_daily_limit(request.user)
+                if not allowed:
+                    return Response(
+                        {"detail": f"Daily limit reached ({limit} analyses per 24 hours). Try again later."},
+                        status=status.HTTP_429_TOO_MANY_REQUESTS,
+                    )
 
         job_desc = JobDescription.objects.create(
             user=request.user,
@@ -135,18 +143,45 @@ class AnalysisCompareView(APIView):
         return Response(serializer.data)
 
 
-def _deduct_credit(user):
-    """Atomically deduct 1 credit. Returns True on success, False if insufficient.
-    Always succeeds when payments are disabled."""
-    if not django_settings.PAYMENTS_ENABLED:
-        return True
+def _get_daily_analysis_count(user):
+    """Count analyses created by the user in the last 24 hours."""
+    since = timezone.now() - timezone.timedelta(hours=24)
+    return AnalysisResult.objects.filter(
+        resume__user=user, created_at__gte=since
+    ).count() + LinkedInAnalysis.objects.filter(
+        user=user, created_at__gte=since
+    ).count()
 
-    from apps.accounts.models import Profile
 
-    updated = Profile.objects.filter(
-        user=user, credits_remaining__gte=1
-    ).update(credits_remaining=models.F("credits_remaining") - 1)
-    return bool(updated)
+def _check_daily_limit(user):
+    """Check if user has exceeded the free daily analysis limit.
+    Returns (allowed, used, limit)."""
+    limit = django_settings.FREE_DAILY_ANALYSIS_LIMIT
+    used = _get_daily_analysis_count(user)
+    return used < limit, used, limit
+
+
+def _check_usage_allowed(user):
+    """Check if the user can perform an analysis action.
+    Returns (allowed: bool, error_detail: str|None, http_status: int|None).
+    Staff/superusers are always allowed."""
+    if user.is_staff:
+        return True, None, None
+
+    if django_settings.PAYMENTS_ENABLED:
+        from apps.accounts.models import Profile
+
+        updated = Profile.objects.filter(
+            user=user, credits_remaining__gte=1
+        ).update(credits_remaining=models.F("credits_remaining") - 1)
+        if not updated:
+            return False, "No credits remaining. Please purchase more credits.", status.HTTP_402_PAYMENT_REQUIRED
+        return True, None, None
+    else:
+        allowed, used, limit = _check_daily_limit(user)
+        if not allowed:
+            return False, f"Daily limit reached ({limit} analyses per 24 hours). Try again later.", status.HTTP_429_TOO_MANY_REQUESTS
+        return True, None, None
 
 
 class ResumeRewriteView(APIView):
@@ -164,11 +199,9 @@ class ResumeRewriteView(APIView):
                 {"detail": "Resume rewrite already generated.", "rewritten_resume_text": result.rewritten_resume_text},
             )
 
-        if not request.user.is_staff and not _deduct_credit(request.user):
-            return Response(
-                {"detail": "No credits remaining. Please purchase more credits."},
-                status=status.HTTP_402_PAYMENT_REQUIRED,
-            )
+        allowed, detail, http_status = _check_usage_allowed(request.user)
+        if not allowed:
+            return Response({"detail": detail}, status=http_status)
 
         run_resume_rewrite_task.delay(str(result.id))
         return Response({"detail": "Resume rewrite started."}, status=status.HTTP_202_ACCEPTED)
@@ -265,11 +298,9 @@ class InterviewPrepView(APIView):
                 {"detail": "Interview questions already generated.", "interview_questions": result.interview_questions},
             )
 
-        if not request.user.is_staff and not _deduct_credit(request.user):
-            return Response(
-                {"detail": "No credits remaining. Please purchase more credits."},
-                status=status.HTTP_402_PAYMENT_REQUIRED,
-            )
+        allowed, detail, http_status = _check_usage_allowed(request.user)
+        if not allowed:
+            return Response({"detail": detail}, status=http_status)
 
         # Clear any previous error so polling can detect new failures
         if result.error_message:
@@ -290,11 +321,9 @@ class LinkedInAnalyzeView(APIView):
         serializer.is_valid(raise_exception=True)
         d = serializer.validated_data
 
-        if not request.user.is_staff and not _deduct_credit(request.user):
-            return Response(
-                {"detail": "No credits remaining. Please purchase more credits."},
-                status=status.HTTP_402_PAYMENT_REQUIRED,
-            )
+        allowed, detail, http_status = _check_usage_allowed(request.user)
+        if not allowed:
+            return Response({"detail": detail}, status=http_status)
 
         obj = LinkedInAnalysis.objects.create(
             user=request.user,
