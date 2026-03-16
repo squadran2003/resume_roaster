@@ -92,6 +92,15 @@ class AnalysisDetailView(APIView):
         )
         return Response(AnalysisResultSerializer(result).data)
 
+    def delete(self, request, pk):
+        result = get_object_or_404(
+            AnalysisResult,
+            id=pk,
+            resume__user=request.user,
+        )
+        result.delete()
+        return Response(status=204)
+
 
 class AnalysisListView(APIView):
     """List all analyses for the authenticated user, most recent first."""

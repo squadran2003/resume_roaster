@@ -149,15 +149,24 @@
         </template>
 
         <template #item.actions="{ item }">
-          <v-btn
-            size="small"
-            color="primary"
-            variant="tonal"
-            prepend-icon="mdi-eye"
-            :to="`/analysis/${item.id}`"
-          >
-            View
-          </v-btn>
+          <div class="d-flex ga-1">
+            <v-btn
+              size="small"
+              color="primary"
+              variant="tonal"
+              prepend-icon="mdi-eye"
+              :to="`/analysis/${item.id}`"
+            >
+              View
+            </v-btn>
+            <v-btn
+              size="small"
+              color="error"
+              variant="text"
+              icon="mdi-delete"
+              @click="confirmDeleteAnalysis(item)"
+            />
+          </div>
         </template>
       </v-data-table>
     </v-card>
@@ -171,6 +180,19 @@
           <v-spacer />
           <v-btn @click="deleteDialog = false">Cancel</v-btn>
           <v-btn color="error" :loading="deleting" @click="doDelete">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete analysis dialog -->
+    <v-dialog v-model="deleteAnalysisDialog" max-width="400">
+      <v-card>
+        <v-card-title>Delete analysis?</v-card-title>
+        <v-card-text>This action cannot be undone.</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn @click="deleteAnalysisDialog = false">Cancel</v-btn>
+          <v-btn color="error" :loading="deletingAnalysis" @click="doDeleteAnalysis">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -251,12 +273,15 @@ const analysisHeaders = [
   { title: 'Score', key: 'match_score', width: 90 },
   { title: 'Status', key: 'status', width: 110 },
   { title: 'Date', key: 'created_at', width: 110 },
-  { title: '', key: 'actions', sortable: false, width: 100 },
+  { title: '', key: 'actions', sortable: false, width: 160 },
 ]
 
 const deleteDialog = ref(false)
 const selectedResume = ref(null)
 const deleting = ref(false)
+const deleteAnalysisDialog = ref(false)
+const selectedAnalysis = ref(null)
+const deletingAnalysis = ref(false)
 const showBuyDialog = ref(false)
 const selectedPackIndex = ref(null)
 const compareIds = ref([])
@@ -280,6 +305,22 @@ async function doDelete() {
     deleteDialog.value = false
   } finally {
     deleting.value = false
+  }
+}
+
+function confirmDeleteAnalysis(item) {
+  selectedAnalysis.value = item
+  deleteAnalysisDialog.value = true
+}
+
+async function doDeleteAnalysis() {
+  deletingAnalysis.value = true
+  try {
+    await analysisStore.deleteAnalysis(selectedAnalysis.value.id)
+    compareIds.value = compareIds.value.filter(id => id !== selectedAnalysis.value.id)
+    deleteAnalysisDialog.value = false
+  } finally {
+    deletingAnalysis.value = false
   }
 }
 

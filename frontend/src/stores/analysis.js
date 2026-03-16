@@ -97,5 +97,10 @@ export const useAnalysisStore = defineStore('analysis', () => {
     })
   }
 
-  return { current, analyses, loading, error, pagination, submitAnalysis, fetchAnalyses, pollAnalysis, pollField }
+  async function deleteAnalysis(id) {
+    await analysisApi.delete(id)
+    analyses.value = analyses.value.filter(a => a.id !== id)
+  }
+
+  return { current, analyses, loading, error, pagination, submitAnalysis, fetchAnalyses, pollAnalysis, pollField, deleteAnalysis }
 })

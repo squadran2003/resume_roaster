@@ -3,6 +3,7 @@ import client from './client'
 export const analysisApi = {
   create: (data) => client.post('/analysis/', data),
   get: (id) => client.get(`/analysis/${id}/`),
+  delete: (id) => client.delete(`/analysis/${id}/`),
   list: (page = 1) => client.get(`/analysis/list/?page=${page}`),
   compare: (id1, id2) => client.get(`/analysis/compare/?ids=${id1},${id2}`),
   requestRewrite: (id) => client.post(`/analysis/${id}/rewrite/`),
