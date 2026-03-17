@@ -33,7 +33,7 @@
             Sign In
           </v-btn>
         </div>
-        <p class="mt-4 text-body-2" style="color: rgba(255, 255, 255, 0.7);">1 free credit on signup — no credit card required.</p>
+        <p v-if="authStore.paymentsEnabled" class="mt-4 text-body-2" style="color: rgba(255, 255, 255, 0.7);">1 free credit on signup — no credit card required.</p>
       </v-container>
     </section>
 
@@ -166,6 +166,10 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
 const features = [
   {
     icon: 'mdi-chart-bar',
