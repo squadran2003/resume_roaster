@@ -37,7 +37,8 @@
             prepend-inner-icon="mdi-lock-check"
             class="mb-4"
           />
-          <v-btn type="submit" color="primary" block size="large" :loading="loading">Register</v-btn>
+          <div v-if="turnstileSiteKey" ref="turnstileRef" class="mb-4"></div>
+          <v-btn type="submit" color="primary" block size="large" :loading="loading" :disabled="turnstileSiteKey && !turnstileToken">Register</v-btn>
         </v-form>
       </v-card-text>
       <v-card-actions class="justify-center pb-6">
@@ -49,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { authApi } from '../api/auth'
 
 const email = ref('')
@@ -60,6 +61,55 @@ const loading = ref(false)
 const error = ref(null)
 const success = ref(false)
 
+const turnstileSiteKey = ref('')
+const turnstileToken = ref('')
+const turnstileRef = ref(null)
+let turnstileWidgetId = null
+
+onMounted(async () => {
+  try {
+    const { data } = await authApi.getConfig()
+    turnstileSiteKey.value = data.cloudflare_turnstile_site_key || ''
+  } catch {
+    turnstileSiteKey.value = ''
+  }
+
+  if (turnstileSiteKey.value) {
+    await waitForTurnstile()
+    renderTurnstile()
+  }
+})
+
+function waitForTurnstile() {
+  return new Promise((resolve) => {
+    if (window.turnstile) return resolve()
+    const interval = setInterval(() => {
+      if (window.turnstile) {
+        clearInterval(interval)
+        resolve()
+      }
+    }, 100)
+  })
+}
+
+function renderTurnstile() {
+  if (!turnstileRef.value || !window.turnstile) return
+  turnstileWidgetId = window.turnstile.render(turnstileRef.value, {
+    sitekey: turnstileSiteKey.value,
+    theme: 'light',
+    callback: (token) => { turnstileToken.value = token },
+    'expired-callback': () => { turnstileToken.value = '' },
+    'error-callback': () => { turnstileToken.value = '' },
+  })
+}
+
+function resetTurnstile() {
+  turnstileToken.value = ''
+  if (window.turnstile && turnstileWidgetId != null) {
+    window.turnstile.reset(turnstileWidgetId)
+  }
+}
+
 async function submit() {
   if (password.value !== password2.value) {
     error.value = 'Passwords do not match.'
@@ -68,11 +118,14 @@ async function submit() {
   loading.value = true
   error.value = null
   try {
-    await authApi.register({ email: email.value, password: password.value, password_confirm: password2.value })
+    const payload = { email: email.value, password: password.value, password_confirm: password2.value }
+    if (turnstileToken.value) payload.turnstile_token = turnstileToken.value
+    await authApi.register(payload)
     success.value = true
   } catch (e) {
     const data = e.response?.data
-    error.value = data ? Object.values(data).flat().join(' ') : 'Registration failed.'
+    error.value = data?.detail || (data ? Object.values(data).flat().join(' ') : 'Registration failed.')
+    resetTurnstile()
   } finally {
     loading.value = false
   }

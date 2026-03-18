@@ -6,4 +6,5 @@ export const authApi = {
   refreshToken: (refresh) => client.post('/auth/token/refresh/', { refresh }),
   getMe: () => client.get('/auth/me/'),
   updateMe: (data) => client.patch('/auth/me/', data),
+  getConfig: () => client.get('/auth/config/'),
 }

@@ -9,8 +9,10 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!accessToken.value)
   const paymentsEnabled = computed(() => user.value?.payments_enabled ?? false)
 
-  async function login(email, password) {
-    const { data } = await authApi.login({ email, password })
+  async function login(email, password, turnstileToken) {
+    const payload = { email, password }
+    if (turnstileToken) payload.turnstile_token = turnstileToken
+    const { data } = await authApi.login(payload)
     accessToken.value = data.access
     localStorage.setItem('access_token', data.access)
     localStorage.setItem('refresh_token', data.refresh)
