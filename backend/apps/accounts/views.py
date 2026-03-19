@@ -1,9 +1,13 @@
 import requests
 from django.conf import settings
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import User
 from .serializers import RegisterSerializer, MeSerializer
@@ -87,6 +91,61 @@ class MeView(APIView):
         return Response(serializer.data)
 
 
+class GoogleAuthView(APIView):
+    """Authenticate via Google OAuth ID token."""
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def post(self, request):
+        credential = request.data.get("credential")
+        if not credential:
+            return Response(
+                {"detail": "Missing credential."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        client_id = settings.GOOGLE_OAUTH_CLIENT_ID
+        if not client_id:
+            return Response(
+                {"detail": "Google authentication is not configured."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            idinfo = google_id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                client_id,
+            )
+        except ValueError:
+            return Response(
+                {"detail": "Invalid Google token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not idinfo.get("email_verified"):
+            return Response(
+                {"detail": "Email not verified by Google."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = idinfo["email"].lower()
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            user = User.objects.create_user(
+                email=email,
+                first_name=idinfo.get("given_name", ""),
+                last_name=idinfo.get("family_name", ""),
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        })
+
+
 class PublicConfigView(APIView):
     """Return public configuration values needed by the frontend."""
     permission_classes = [AllowAny]
@@ -94,4 +153,5 @@ class PublicConfigView(APIView):
     def get(self, request):
         return Response({
             "cloudflare_turnstile_site_key": settings.CLOUDFLARE_TURNSTILE_SITE_KEY,
+            "google_oauth_client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
         })

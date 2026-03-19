@@ -7,4 +7,5 @@ export const authApi = {
   getMe: () => client.get('/auth/me/'),
   updateMe: (data) => client.patch('/auth/me/', data),
   getConfig: () => client.get('/auth/config/'),
+  googleLogin: (credential) => client.post('/auth/google/', { credential }),
 }

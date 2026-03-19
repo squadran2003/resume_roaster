@@ -38,5 +38,13 @@ export const useAuthStore = defineStore('auth', () => {
     fetchMe().catch(logout)
   }
 
-  return { accessToken, user, isAuthenticated, paymentsEnabled, login, logout, fetchMe }
+  async function googleLogin(credential) {
+    const { data } = await authApi.googleLogin(credential)
+    accessToken.value = data.access
+    localStorage.setItem('access_token', data.access)
+    localStorage.setItem('refresh_token', data.refresh)
+    await fetchMe()
+  }
+
+  return { accessToken, user, isAuthenticated, paymentsEnabled, login, googleLogin, logout, fetchMe }
 })

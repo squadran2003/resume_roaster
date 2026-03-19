@@ -7,6 +7,18 @@
         <v-alert v-if="success" type="success" density="compact" class="mb-4">
           Account created! <router-link to="/login">Sign in</router-link>
         </v-alert>
+        <template v-if="!success">
+          <GoogleSignInButton
+            v-if="googleClientId"
+            :client-id="googleClientId"
+            class="mb-4"
+            @credential="handleGoogleCredential"
+            @error="handleGoogleError"
+          />
+          <div v-if="googleClientId" class="d-flex align-center mb-4">
+            <v-divider /><span class="text-body-2 text-grey px-3">or</span><v-divider />
+          </div>
+        </template>
         <v-form v-if="!success" @submit.prevent="submit">
           <v-text-field
             v-model="email"
@@ -51,7 +63,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import { authApi } from '../api/auth'
+import GoogleSignInButton from '../components/GoogleSignInButton.vue'
+
+const router = useRouter()
+const auth = useAuthStore()
 
 const email = ref('')
 const password = ref('')
@@ -61,6 +79,7 @@ const loading = ref(false)
 const error = ref(null)
 const success = ref(false)
 
+const googleClientId = ref('')
 const turnstileSiteKey = ref('')
 const turnstileToken = ref('')
 const turnstileRef = ref(null)
@@ -70,8 +89,10 @@ onMounted(async () => {
   try {
     const { data } = await authApi.getConfig()
     turnstileSiteKey.value = data.cloudflare_turnstile_site_key || ''
+    googleClientId.value = data.google_oauth_client_id || ''
   } catch {
     turnstileSiteKey.value = ''
+    googleClientId.value = ''
   }
 
   if (turnstileSiteKey.value) {
@@ -108,6 +129,23 @@ function resetTurnstile() {
   if (window.turnstile && turnstileWidgetId != null) {
     window.turnstile.reset(turnstileWidgetId)
   }
+}
+
+async function handleGoogleCredential(credential) {
+  loading.value = true
+  error.value = null
+  try {
+    await auth.googleLogin(credential)
+    router.push('/dashboard')
+  } catch (e) {
+    error.value = e.response?.data?.detail || 'Google sign-in failed.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleGoogleError(msg) {
+  error.value = 'Google sign-in unavailable.'
 }
 
 async function submit() {

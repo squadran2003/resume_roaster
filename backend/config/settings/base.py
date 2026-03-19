@@ -143,6 +143,9 @@ CREDIT_PACKS = [
 CLOUDFLARE_TURNSTILE_SITE_KEY = config("CLOUD_FLARE_SITE_KEY", default="")
 CLOUDFLARE_TURNSTILE_SECRET_KEY = config("CLOUD_FLARE_SECRET_KEY", default="")
 
+# --- Google OAuth ---
+GOOGLE_OAUTH_CLIENT_ID = config("GOOGLE_OAUTH_CLIENT_ID", default="")
+
 # --- Celery ---
 CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379/0")
