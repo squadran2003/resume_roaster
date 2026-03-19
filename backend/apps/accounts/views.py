@@ -98,6 +98,7 @@ class GoogleAuthView(APIView):
 
     def post(self, request):
         credential = request.data.get("credential")
+        
         if not credential:
             return Response(
                 {"detail": "Missing credential."},
