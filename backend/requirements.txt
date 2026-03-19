@@ -21,3 +21,4 @@ whitenoise==6.*
 sentry-sdk==2.*
 python-json-logger==2.*
 fpdf2==2.8.*
+google-auth==2.29.*
