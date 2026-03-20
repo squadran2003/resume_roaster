@@ -1,11 +1,13 @@
 <template>
   <v-container class="py-8 d-flex justify-center">
-    <v-card width="520" elevation="4" rounded="lg">
-      <v-card-title class="pt-6 text-h5 font-weight-bold">Account</v-card-title>
-      <v-card-text>
-        <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
-        <v-alert v-if="saved" type="success" density="compact" class="mb-4">Changes saved.</v-alert>
+    <div style="width: 100%; max-width: 520px;">
+      <h1 class="text-h5 font-weight-bold mb-6">Account</h1>
 
+      <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
+      <v-alert v-if="saved" type="success" density="compact" class="mb-4">Changes saved.</v-alert>
+
+      <!-- Profile info -->
+      <v-card elevation="0" class="mb-6 section-card">
         <v-list lines="two">
           <v-list-item prepend-icon="mdi-email" title="Email" :subtitle="auth.user?.email || '—'" />
           <v-list-item
@@ -15,33 +17,37 @@
             :subtitle="`${auth.user?.profile?.credits_remaining ?? 0} remaining`"
           />
         </v-list>
+        <div v-if="auth.paymentsEnabled" class="px-4 pb-4">
+          <v-btn color="primary" variant="tonal" prepend-icon="mdi-plus" to="/dashboard">
+            Buy More Credits
+          </v-btn>
+        </div>
+      </v-card>
 
-        <v-btn v-if="auth.paymentsEnabled" color="success" variant="flat" class="mb-4" prepend-icon="mdi-plus" to="/dashboard">
-          Buy More Credits
-        </v-btn>
-
-        <v-divider class="my-4" />
-
-        <h3 class="text-subtitle-1 font-weight-bold mb-3">Change password</h3>
+      <!-- Change password -->
+      <v-card elevation="0" class="mb-6 section-card pa-5">
+        <h3 class="text-subtitle-1 font-weight-bold mb-4">Change password</h3>
         <v-form ref="formRef" @submit.prevent="changePassword">
           <v-text-field
             v-model="newPassword"
             label="New password"
             type="password"
-            variant="outlined"
+            prepend-inner-icon="mdi-lock"
             class="mb-3"
           />
           <v-text-field
             v-model="newPassword2"
             label="Confirm new password"
             type="password"
-            variant="outlined"
+            prepend-inner-icon="mdi-lock-check"
             class="mb-4"
           />
           <v-btn type="submit" color="primary" :loading="saving">Save changes</v-btn>
         </v-form>
+      </v-card>
 
-        <v-divider class="my-6" />
+      <!-- Sign out -->
+      <v-card elevation="0" class="section-card pa-5">
         <v-btn
           color="error"
           variant="outlined"
@@ -50,8 +56,8 @@
         >
           Sign out
         </v-btn>
-      </v-card-text>
-    </v-card>
+      </v-card>
+    </div>
   </v-container>
 </template>
 
@@ -90,3 +96,9 @@ async function changePassword() {
   }
 }
 </script>
+
+<style scoped>
+.section-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+</style>

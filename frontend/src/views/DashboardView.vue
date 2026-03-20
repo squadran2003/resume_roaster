@@ -1,31 +1,35 @@
 <template>
   <v-container class="py-8">
     <!-- Credits banner -->
-    <v-card v-if="authStore.paymentsEnabled" elevation="2" rounded="lg" class="mb-6 pa-4">
-      <div class="d-flex align-center flex-wrap ga-4">
-        <div>
-          <div class="text-h6 font-weight-bold">
-            <v-icon icon="mdi-star-circle" color="amber" class="mr-1" />
-            {{ credits }} credits remaining
+    <v-card v-if="authStore.paymentsEnabled" elevation="0" class="mb-6 credits-banner">
+      <div class="credits-gradient pa-5 d-flex align-center flex-wrap ga-4">
+        <div class="d-flex align-center" style="gap: 12px;">
+          <div class="credits-badge">
+            <v-icon icon="mdi-star-four-points" size="28" color="amber" />
           </div>
-          <div class="text-body-2 text-medium-emphasis">Each analysis costs 1 credit. Resume rewrite and interview prep cost 1 credit each.</div>
+          <div>
+            <div class="text-h5 font-weight-bold text-white">{{ credits }}</div>
+            <div class="text-body-2" style="color: rgba(255,255,255,0.6);">credits remaining</div>
+          </div>
         </div>
         <v-spacer />
-        <v-btn color="success" variant="flat" prepend-icon="mdi-plus" @click="selectedPackIndex = null; showBuyDialog = true">
-          Buy Credits
+        <v-btn color="white" variant="flat" prepend-icon="mdi-plus" @click="selectedPackIndex = null; showBuyDialog = true">
+          <span style="color: #E64A19;">Buy Credits</span>
         </v-btn>
       </div>
     </v-card>
 
     <!-- Daily usage banner (free mode) -->
-    <v-card v-if="!authStore.paymentsEnabled && !isAdmin" elevation="2" rounded="lg" class="mb-6 pa-4">
-      <div class="d-flex align-center flex-wrap ga-4">
-        <div>
-          <div class="text-h6 font-weight-bold">
-            <v-icon icon="mdi-lightning-bolt" color="primary" class="mr-1" />
-            {{ dailyRemaining }} of {{ dailyLimit }} free analyses remaining today
+    <v-card v-if="!authStore.paymentsEnabled && !isAdmin" elevation="0" class="mb-6 credits-banner">
+      <div class="credits-gradient pa-5 d-flex align-center flex-wrap ga-4">
+        <div class="d-flex align-center" style="gap: 12px;">
+          <div class="credits-badge">
+            <v-icon icon="mdi-lightning-bolt" size="28" color="amber" />
           </div>
-          <div class="text-body-2 text-medium-emphasis">Your limit resets on a rolling 24-hour basis.</div>
+          <div>
+            <div class="text-h5 font-weight-bold text-white">{{ dailyRemaining }} / {{ dailyLimit }}</div>
+            <div class="text-body-2" style="color: rgba(255,255,255,0.6);">free analyses remaining today</div>
+          </div>
         </div>
       </div>
     </v-card>
@@ -45,18 +49,30 @@
       {{ resumeStore.error }}
     </v-alert>
 
-    <v-card elevation="2" rounded="lg" class="mb-8">
+    <v-card elevation="0" class="mb-8 table-card">
       <v-data-table
         :headers="resumeHeaders"
         :items="resumeStore.resumes"
         :loading="resumeStore.loading"
-        no-data-text="No resumes yet. Upload one to get started."
       >
+        <template #no-data>
+          <div class="text-center py-12">
+            <v-icon icon="mdi-file-upload-outline" size="64" color="grey-lighten-1" class="mb-4" />
+            <div class="text-h6 mb-2">No resumes yet</div>
+            <div class="text-body-2 text-medium-emphasis mb-6">
+              Upload your resume to get started with AI analysis
+            </div>
+            <v-btn color="primary" prepend-icon="mdi-upload" to="/upload" size="large">
+              Upload Your Resume
+            </v-btn>
+          </div>
+        </template>
+
         <template #item.original_filename="{ item }">
           <div class="d-flex align-center ga-2">
             <v-icon
               :icon="item.mime_type === 'application/pdf' ? 'mdi-file-pdf-box' : 'mdi-file-word'"
-              color="red-darken-1"
+              color="error"
             />
             {{ item.original_filename }}
           </div>
@@ -105,13 +121,25 @@
       </v-btn>
     </div>
 
-    <v-card elevation="2" rounded="lg">
+    <v-card elevation="0" class="table-card">
       <v-data-table
         :headers="analysisHeaders"
         :items="analysisStore.analyses"
         :loading="analysisStore.loading"
-        no-data-text="No analyses yet."
       >
+        <template #no-data>
+          <div class="text-center py-12">
+            <v-icon icon="mdi-robot-outline" size="64" color="grey-lighten-1" class="mb-4" />
+            <div class="text-h6 mb-2">No analyses yet</div>
+            <div class="text-body-2 text-medium-emphasis mb-6">
+              Select a resume and paste a job description to run your first AI analysis
+            </div>
+            <v-btn color="primary" prepend-icon="mdi-robot" to="/analysis/new" size="large">
+              Run First Analysis
+            </v-btn>
+          </div>
+        </template>
+
         <template #item.select="{ item }">
           <v-checkbox
             v-if="item.status === 'done'"
@@ -131,7 +159,7 @@
           >
             {{ item.match_score }}
           </v-chip>
-          <span v-else class="text-medium-emphasis">—</span>
+          <span v-else class="text-medium-emphasis">&mdash;</span>
         </template>
 
         <template #item.status="{ item }">
@@ -335,3 +363,28 @@ function toggleCompare(id) {
   }
 }
 </script>
+
+<style scoped>
+.credits-banner {
+  overflow: hidden;
+}
+
+.credits-gradient {
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+  border-radius: inherit;
+}
+
+.credits-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+</style>

@@ -2,38 +2,61 @@
   <div>
     <!-- Hero -->
     <section class="hero-section">
-      <v-container class="py-16 text-center">
-        <v-chip color="orange-darken-2" variant="flat" size="small" class="mb-4 text-uppercase font-weight-bold">
-          AI-Powered Resume Analysis
-        </v-chip>
-        <h1 class="hero-title mb-4">
-          Stop Guessing.<br />Start Getting Interviews.
-        </h1>
-        <p class="hero-subtitle mx-auto mb-8">
-          Upload your resume and a job description. Our AI scores the match, rewrites weak bullets,
-          maps keyword gaps, generates a cover letter, and even rewrites your entire resume — in seconds.
-        </p>
-        <div class="d-flex justify-center gap-4 flex-wrap">
-          <v-btn
-            to="/register"
-            color="orange-darken-2"
-            size="x-large"
-            variant="flat"
-            class="font-weight-bold px-8"
-          >
-            Roast My Resume
-          </v-btn>
-          <v-btn
-            to="/login"
-            size="x-large"
-            variant="outlined"
-            color="white"
-            class="px-8"
-          >
-            Sign In
-          </v-btn>
-        </div>
-        <p v-if="authStore.paymentsEnabled" class="mt-4 text-body-2" style="color: rgba(255, 255, 255, 0.7);">1 free credit on signup — no credit card required.</p>
+      <div class="hero-glow" />
+      <v-container class="py-16 text-center hero-content">
+        <Transition name="hero-fade" appear>
+          <div>
+            <v-chip color="primary" variant="flat" size="small" class="mb-5 text-uppercase font-weight-bold">
+              AI-Powered Resume Analysis
+            </v-chip>
+            <h1 class="hero-title mb-5">
+              Stop Guessing.<br />Start Getting Interviews.
+            </h1>
+            <p class="hero-subtitle mx-auto mb-8">
+              Upload your resume and a job description. Our AI scores the match, rewrites weak bullets,
+              maps keyword gaps, generates a cover letter, and even rewrites your entire resume — in seconds.
+            </p>
+            <div class="d-flex justify-center gap-4 flex-wrap mb-8">
+              <v-btn
+                to="/register"
+                color="primary"
+                size="x-large"
+                variant="flat"
+                class="font-weight-bold px-8 hero-cta"
+              >
+                Roast My Resume
+              </v-btn>
+              <v-btn
+                to="/login"
+                size="x-large"
+                variant="outlined"
+                color="white"
+                class="px-8"
+              >
+                Sign In
+              </v-btn>
+            </div>
+            <p v-if="authStore.paymentsEnabled" class="text-body-2" style="color: rgba(255, 255, 255, 0.6);">1 free credit on signup — no credit card required.</p>
+
+            <!-- Stats bar -->
+            <div class="d-flex justify-center flex-wrap mt-10 hero-stats">
+              <div class="text-center px-6">
+                <div class="text-h5 font-weight-bold text-white">7</div>
+                <div class="text-body-2" style="color: rgba(255,255,255,0.5)">AI tools</div>
+              </div>
+              <div class="stat-divider" />
+              <div class="text-center px-6">
+                <div class="text-h5 font-weight-bold text-white">&lt;30s</div>
+                <div class="text-body-2" style="color: rgba(255,255,255,0.5)">Analysis time</div>
+              </div>
+              <div class="stat-divider" />
+              <div class="text-center px-6">
+                <div class="text-h5 font-weight-bold text-white">1 free</div>
+                <div class="text-body-2" style="color: rgba(255,255,255,0.5)">No card needed</div>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </v-container>
     </section>
 
@@ -44,10 +67,12 @@
           <h2 class="text-h4 font-weight-bold mb-2">Everything you need to land the role</h2>
           <p class="text-medium-emphasis">Seven powerful tools, one upload.</p>
         </div>
-        <v-row justify="center" class="ga-4">
-          <v-col cols="12" sm="6" md="3" v-for="feature in features" :key="feature.title">
-            <v-card height="100%" rounded="xl" elevation="0" border class="pa-6 text-center feature-card">
-              <v-icon :color="feature.color" size="48" class="mb-4">{{ feature.icon }}</v-icon>
+        <v-row justify="center">
+          <v-col cols="12" sm="6" md="4" v-for="feature in features" :key="feature.title">
+            <v-card height="100%" elevation="0" class="pa-6 text-center feature-card">
+              <div class="feature-icon-wrap mx-auto mb-4">
+                <v-icon color="primary" size="32">{{ feature.icon }}</v-icon>
+              </div>
               <div class="text-h6 font-weight-bold mb-2">{{ feature.title }}</div>
               <div class="text-body-2 text-medium-emphasis">{{ feature.description }}</div>
             </v-card>
@@ -63,16 +88,13 @@
           <h2 class="text-h4 font-weight-bold mb-2">How it works</h2>
           <p class="text-medium-emphasis">Three steps from upload to offer-ready.</p>
         </div>
-        <v-row justify="center" align="stretch">
-          <v-col cols="12" md="4" v-for="(step, i) in steps" :key="step.title" class="d-flex">
-            <div class="text-center flex-grow-1 px-4">
-              <div class="step-number mx-auto mb-4">{{ i + 1 }}</div>
-              <div class="text-h6 font-weight-bold mb-2">{{ step.title }}</div>
-              <p class="text-body-2 text-medium-emphasis">{{ step.description }}</p>
-            </div>
-            <v-divider v-if="i < steps.length - 1" vertical class="d-none d-md-flex mx-2 align-self-center step-divider" />
-          </v-col>
-        </v-row>
+        <div class="steps-row">
+          <div v-for="(step, i) in steps" :key="step.title" class="step-item">
+            <div class="step-number mx-auto mb-4">{{ i + 1 }}</div>
+            <div class="text-h6 font-weight-bold mb-2">{{ step.title }}</div>
+            <p class="text-body-2 text-medium-emphasis">{{ step.description }}</p>
+          </div>
+        </div>
       </v-container>
     </section>
 
@@ -80,21 +102,23 @@
     <section class="py-16 bg-surface">
       <v-container>
         <div class="text-center mb-12">
+          <v-chip color="primary" variant="tonal" size="small" class="mb-3">Live preview</v-chip>
           <h2 class="text-h4 font-weight-bold mb-2">See the analysis in action</h2>
           <p class="text-medium-emphasis">Real feedback, not generic advice.</p>
         </div>
         <v-row justify="center">
           <v-col cols="12" md="8">
-            <v-card rounded="xl" elevation="2" class="pa-6">
+            <v-card elevation="0" class="pa-6 sample-card">
               <!-- Score bar -->
               <div class="d-flex align-center justify-space-between mb-2">
                 <span class="text-body-1 font-weight-medium">Job Match Score</span>
-                <v-chip color="green" variant="flat" size="small">78 / 100</v-chip>
+                <v-chip color="success" variant="flat" size="small">78 / 100</v-chip>
               </div>
               <v-progress-linear
                 model-value="78"
-                color="green"
-                bg-color="green-lighten-4"
+                color="success"
+                bg-color="success"
+                bg-opacity="0.15"
                 height="10"
                 rounded
                 class="mb-6"
@@ -102,13 +126,13 @@
 
               <!-- Bullet rewrite example -->
               <div class="text-overline text-medium-emphasis mb-2">Bullet Rewrite Example</div>
-              <v-card variant="tonal" color="error" rounded="lg" class="pa-3 mb-2">
+              <v-card variant="tonal" color="error" class="pa-3 mb-2">
                 <div class="d-flex align-center gap-2">
                   <v-icon color="error" size="18">mdi-close-circle</v-icon>
                   <span class="text-body-2 text-medium-emphasis">Before: <em>"Responsible for managing social media accounts."</em></span>
                 </div>
               </v-card>
-              <v-card variant="tonal" color="success" rounded="lg" class="pa-3 mb-6">
+              <v-card variant="tonal" color="success" class="pa-3 mb-6">
                 <div class="d-flex align-center gap-2">
                   <v-icon color="success" size="18">mdi-check-circle</v-icon>
                   <span class="text-body-2">After: <em>"Grew Instagram engagement 43% in 3 months by A/B testing content cadence and launching 2 influencer partnerships."</em></span>
@@ -132,8 +156,8 @@
     <section class="cta-section py-20 text-center">
       <v-container>
         <h2 class="text-h4 font-weight-bold mb-4 text-white">Ready to get the interview?</h2>
-        <p class="text-body-1 mb-8 mx-auto" style="max-width:480px;opacity:.85;color:white;">
-          Join thousands of job seekers who've improved their resume with AI-powered feedback.
+        <p class="text-body-1 mb-8 mx-auto" style="max-width:480px;opacity:.8;color:white;">
+          Upload your resume and get AI-powered feedback that actually helps you land the job.
         </p>
         <v-btn
           to="/register"
@@ -142,7 +166,7 @@
           variant="flat"
           class="font-weight-bold px-10 cta-btn"
         >
-          Get Started Free
+          Roast My Resume
         </v-btn>
       </v-container>
     </section>
@@ -151,7 +175,10 @@
     <v-footer class="bg-surface py-6">
       <v-container>
         <div class="d-flex flex-wrap justify-space-between align-center gap-4">
-          <span class="font-weight-bold">Resume Roaster</span>
+          <div class="d-flex align-center" style="gap: 8px;">
+            <v-icon icon="mdi-fire" color="primary" size="22" />
+            <span class="font-weight-bold">Resume Roaster</span>
+          </div>
           <span class="text-medium-emphasis text-body-2">
             &copy; {{ new Date().getFullYear() }} Resume Roaster. All rights reserved.
           </span>
@@ -251,43 +278,36 @@ const authStore = useAuthStore()
 const features = [
   {
     icon: 'mdi-chart-bar',
-    color: 'orange-darken-2',
     title: 'Match Score',
     description: 'Get a 0-100 compatibility score showing how well your resume aligns with the job description.',
   },
   {
     icon: 'mdi-fire',
-    color: 'red-darken-2',
     title: 'Keyword Heatmap',
     description: 'See exactly which JD keywords are in your resume and which are missing — color-coded and actionable.',
   },
   {
     icon: 'mdi-file-document-edit-outline',
-    color: 'deep-purple-darken-2',
     title: 'Full Resume Rewrite',
     description: 'Get your entire resume rewritten and optimized for the job. Download as a formatted PDF.',
   },
   {
     icon: 'mdi-account-question',
-    color: 'indigo-darken-2',
     title: 'Interview Prep',
     description: 'AI generates likely interview questions with STAR answer frameworks based on the JD and your resume gaps.',
   },
   {
     icon: 'mdi-robot-outline',
-    color: 'purple-darken-2',
     title: 'ATS Checker',
     description: 'Missing keywords, formatting problems, and non-standard headers are flagged before they knock you out.',
   },
   {
     icon: 'mdi-email-multiple',
-    color: 'teal-darken-2',
     title: 'Email Templates',
     description: 'Follow-up, thank you, and outreach emails personalized to the company and role.',
   },
   {
     icon: 'mdi-linkedin',
-    color: 'blue-darken-3',
     title: 'LinkedIn Optimizer',
     description: 'Optimize your headline, About section, and skills for recruiter search visibility.',
   },
@@ -311,58 +331,151 @@ const steps = [
 
 <style scoped>
 .hero-section {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 40%, #0f3460 100%);
   color: white;
-  min-height: 520px;
+  min-height: min(100svh, 700px);
   display: flex;
   align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(ellipse, rgba(230, 74, 25, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-title {
   font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.12;
   color: white;
 }
 
 .hero-subtitle {
-  font-size: 1.125rem;
+  font-size: 1.15rem;
   max-width: 560px;
-  opacity: 0.85;
-  color: white;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hero-cta {
+  box-shadow: 0 0 32px rgba(230, 74, 25, 0.35);
+}
+
+/* Hero entrance animation */
+.hero-fade-enter-active {
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.hero-fade-enter-from {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+.hero-stats {
+  gap: 0;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  align-self: center;
+}
+
+/* Feature cards */
+.feature-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(230, 74, 25, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .feature-card {
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 .feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(230, 74, 25, 0.1) !important;
+  border-color: rgba(230, 74, 25, 0.25) !important;
+}
+
+/* Steps */
+.steps-row {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.step-item {
+  flex: 1;
+  min-width: 220px;
+  max-width: 320px;
+  text-align: center;
+  position: relative;
+  padding: 0 1rem;
+}
+
+.step-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 26px;
+  right: -1rem;
+  width: calc(2rem);
+  height: 2px;
+  background: linear-gradient(to right, #e64a19, rgba(230, 74, 25, 0.15));
+}
+
+@media (max-width: 700px) {
+  .step-item:not(:last-child)::after {
+    display: none;
+  }
 }
 
 .step-number {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #e64a19;
+  background: linear-gradient(135deg, #E64A19, #BF360C);
   color: white;
   font-size: 1.25rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 16px rgba(230, 74, 25, 0.3);
 }
 
-.step-divider {
-  height: 80px;
-  opacity: 0.3;
+/* Sample output card */
+.sample-card {
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 0 60px rgba(230, 74, 25, 0.06) !important;
 }
 
+/* CTA */
 .cta-section {
-  background: linear-gradient(135deg, #e64a19 0%, #bf360c 100%);
+  background: linear-gradient(135deg, #E64A19 0%, #BF360C 100%);
 }
 
 .cta-btn {
-  color: #e64a19 !important;
+  color: #E64A19 !important;
+}
+.cta-btn:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 </style>

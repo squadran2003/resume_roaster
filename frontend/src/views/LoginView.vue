@@ -1,9 +1,36 @@
 <template>
-  <v-container class="d-flex align-center justify-center" style="min-height: 80vh">
-    <v-card width="420" elevation="4" rounded="lg">
-      <v-card-title class="pt-6 pb-2 text-center text-h5 font-weight-bold">Sign in</v-card-title>
-      <v-card-text>
+  <div class="auth-layout">
+    <!-- Brand panel (desktop) -->
+    <div class="auth-brand d-none d-md-flex">
+      <div class="d-flex flex-column justify-center pa-12">
+        <v-icon icon="mdi-fire" color="primary" size="56" class="mb-5" />
+        <h2 class="text-h4 font-weight-bold text-white mb-3">Resume Roaster</h2>
+        <p class="text-body-1" style="color: rgba(255,255,255,0.7); max-width: 340px;">
+          AI-powered match scoring, keyword analysis, bullet rewrites, and cover letters — in seconds.
+        </p>
+        <div class="mt-10 d-flex flex-column" style="gap: 16px;">
+          <div v-for="item in brandPoints" :key="item" class="d-flex align-center" style="gap: 10px;">
+            <v-icon icon="mdi-check-circle" color="primary" size="20" />
+            <span class="text-body-2" style="color: rgba(255,255,255,0.8);">{{ item }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form panel -->
+    <div class="auth-form d-flex align-center justify-center pa-6">
+      <div style="width: 100%; max-width: 400px;">
+        <!-- Mobile logo -->
+        <div class="d-flex d-md-none align-center mb-6" style="gap: 8px;">
+          <v-icon icon="mdi-fire" color="primary" size="28" />
+          <span class="text-h6 font-weight-bold">Resume Roaster</span>
+        </div>
+
+        <h1 class="text-h5 font-weight-bold mb-1">Welcome back</h1>
+        <p class="text-body-2 text-medium-emphasis mb-6">Sign in to your account</p>
+
         <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
+
         <GoogleSignInButton
           v-if="googleClientId"
           :client-id="googleClientId"
@@ -12,8 +39,9 @@
           @error="handleGoogleError"
         />
         <div v-if="googleClientId" class="d-flex align-center mb-4">
-          <v-divider /><span class="text-body-2 text-grey px-3">or</span><v-divider />
+          <v-divider /><span class="text-body-2 text-medium-emphasis px-3">or</span><v-divider />
         </div>
+
         <v-form @submit.prevent="submit">
           <v-text-field
             v-model="email"
@@ -21,7 +49,6 @@
             type="email"
             required
             prepend-inner-icon="mdi-email"
-            variant="outlined"
             class="mb-3"
           />
           <v-text-field
@@ -32,7 +59,6 @@
             prepend-inner-icon="mdi-lock"
             :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
             @click:append-inner="showPassword = !showPassword"
-            variant="outlined"
             class="mb-4"
           />
           <div v-if="turnstileSiteKey" ref="turnstileRef" class="mb-4"></div>
@@ -40,17 +66,18 @@
             Sign in
           </v-btn>
         </v-form>
-      </v-card-text>
-      <v-card-actions class="justify-center pb-6">
-        <span class="text-body-2">No account?</span>
-        <v-btn variant="text" size="small" to="/register" color="primary">Register</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-container>
+
+        <div class="text-center mt-6">
+          <span class="text-body-2 text-medium-emphasis">No account?</span>
+          <v-btn variant="text" size="small" to="/register" color="primary">Register</v-btn>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { useAuthStore } from '../stores/auth'
@@ -83,6 +110,14 @@ const turnstileSiteKey = ref('')
 const turnstileToken = ref('')
 const turnstileRef = ref(null)
 let turnstileWidgetId = null
+
+const brandPoints = computed(() => {
+  const points = ['Results in under 30 seconds', '7 AI-powered tools']
+  if (auth.paymentsEnabled) {
+    points.unshift('1 free credit on signup', 'No credit card required')
+  }
+  return points
+})
 
 onMounted(async () => {
   try {
@@ -161,3 +196,21 @@ async function submit() {
   }
 }
 </script>
+
+<style scoped>
+.auth-layout {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.auth-brand {
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #0f3460 100%);
+}
+
+@media (max-width: 960px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

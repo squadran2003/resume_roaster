@@ -1,10 +1,28 @@
 <template>
   <v-container class="py-8">
-    <!-- Polling -->
-    <div v-if="polling" class="text-center py-16">
-      <v-progress-circular indeterminate color="primary" size="72" class="mb-6" />
-      <div class="text-h6">AI is analyzing your resume...</div>
-      <div class="text-body-2 text-medium-emphasis mt-2">This usually takes 15-30 seconds.</div>
+    <!-- Polling / Loading -->
+    <div v-if="polling" class="text-center py-12">
+      <v-icon icon="mdi-fire" color="primary" size="64" class="mb-5 pulse-icon" />
+      <div class="text-h5 font-weight-bold mb-4">Roasting your resume...</div>
+      <div class="loading-steps mx-auto" style="max-width: 320px; text-align: left;">
+        <div
+          v-for="(step, i) in loadingSteps"
+          :key="i"
+          class="d-flex align-center mb-3"
+          style="gap: 10px;"
+        >
+          <v-icon
+            :icon="currentStep > i ? 'mdi-check-circle' : currentStep === i ? 'mdi-loading' : 'mdi-circle-outline'"
+            :color="currentStep > i ? 'success' : currentStep === i ? 'primary' : 'grey-lighten-1'"
+            :class="{ 'spin-icon': currentStep === i }"
+            size="20"
+          />
+          <span :class="currentStep >= i ? 'font-weight-medium' : 'text-medium-emphasis'" class="text-body-2">
+            {{ step }}
+          </span>
+        </div>
+      </div>
+      <div class="text-body-2 text-medium-emphasis mt-6">Usually takes 15-30 seconds</div>
     </div>
 
     <!-- Failed -->
@@ -21,45 +39,138 @@
         <v-btn variant="tonal" prepend-icon="mdi-arrow-left" to="/dashboard">Dashboard</v-btn>
       </div>
 
-      <!-- Score ring + hire probability -->
-      <v-row class="mb-4">
+      <!-- Score hero row -->
+      <v-row class="mb-6">
         <v-col cols="12" sm="6">
-          <v-card elevation="2" rounded="lg" class="text-center pa-6">
+          <v-card elevation="0" class="text-center pa-8 score-card">
             <v-progress-circular
               :model-value="analysis.match_score"
-              :size="120"
-              :width="12"
+              :size="130"
+              :width="14"
               :color="scoreColor"
             >
-              <span class="text-h4 font-weight-bold">{{ analysis.match_score }}</span>
+              <span class="text-h3 font-weight-bold">{{ analysis.match_score }}</span>
             </v-progress-circular>
-            <div class="text-h6 mt-4">Match Score</div>
+            <div class="text-h6 mt-4 mb-1">Match Score</div>
+            <v-chip :color="scoreColor" variant="tonal" size="small">
+              {{ analysis.match_score >= 75 ? 'Strong Match' : analysis.match_score >= 50 ? 'Partial Match' : 'Weak Match' }}
+            </v-chip>
           </v-card>
         </v-col>
         <v-col cols="12" sm="6">
-          <v-card elevation="2" rounded="lg" class="text-center pa-6">
+          <v-card elevation="0" class="text-center pa-8 score-card">
             <v-progress-circular
               :model-value="Math.round(analysis.hire_probability * 100)"
-              :size="120"
-              :width="12"
+              :size="130"
+              :width="14"
               :color="hireColor"
             >
-              <span class="text-h4 font-weight-bold">
+              <span class="text-h3 font-weight-bold">
                 {{ Math.round(analysis.hire_probability * 100) }}%
               </span>
             </v-progress-circular>
-            <div class="text-h6 mt-4">Hire Probability</div>
+            <div class="text-h6 mt-4 mb-1">Hire Probability</div>
+            <v-chip :color="hireColor" variant="tonal" size="small">
+              {{ Math.round(analysis.hire_probability * 100) >= 60 ? 'Good Odds' : Math.round(analysis.hire_probability * 100) >= 35 ? 'Fair Odds' : 'Needs Work' }}
+            </v-chip>
           </v-card>
         </v-col>
       </v-row>
 
+      <!-- Premium Actions — positioned high for visibility -->
+      <v-row class="mb-6">
+        <v-col cols="12" md="6">
+          <v-card elevation="0" class="pa-5 h-100 premium-card">
+            <div class="d-flex align-center mb-3" style="gap: 8px;">
+              <v-icon icon="mdi-file-document-edit" color="deep-purple" size="24" />
+              <div class="text-h6 font-weight-bold">Full Resume Rewrite</div>
+            </div>
+            <div class="text-body-2 text-medium-emphasis mb-4">
+              AI rewrites your entire resume, optimized for this specific job. Download as PDF.
+            </div>
+            <template v-if="analysis.rewritten_resume_text">
+              <v-alert type="success" variant="tonal" density="compact" class="mb-3">Rewrite ready!</v-alert>
+              <div class="d-flex ga-2 flex-wrap">
+                <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-download" @click="downloadPDF" :loading="downloading">
+                  Download PDF
+                </v-btn>
+                <v-btn variant="tonal" prepend-icon="mdi-eye" @click="showRewrite = !showRewrite">
+                  {{ showRewrite ? 'Hide' : 'Preview' }}
+                </v-btn>
+              </div>
+              <div v-if="showRewrite" class="mt-3 pa-3 rounded-lg bg-surface-variant" style="white-space:pre-wrap;font-size:0.85rem;">{{ analysis.rewritten_resume_text }}</div>
+            </template>
+            <template v-else-if="rewritePolling">
+              <v-progress-linear indeterminate color="deep-purple" class="mb-2" rounded />
+              <div class="text-body-2 text-medium-emphasis">Generating rewrite...</div>
+            </template>
+            <template v-else>
+              <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-creation" @click="requestRewrite" :loading="rewriteLoading">
+                {{ authStore.paymentsEnabled ? 'Generate Rewrite (1 credit)' : 'Generate Rewrite' }}
+              </v-btn>
+            </template>
+            <v-alert v-if="rewriteError" type="error" density="compact" class="mt-2">{{ rewriteError }}</v-alert>
+          </v-card>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-card elevation="0" class="pa-5 h-100 premium-card">
+            <div class="d-flex align-center mb-3" style="gap: 8px;">
+              <v-icon icon="mdi-account-question" color="indigo" size="24" />
+              <div class="text-h6 font-weight-bold">Interview Prep</div>
+            </div>
+            <div class="text-body-2 text-medium-emphasis mb-4">
+              Get 8-10 likely interview questions with STAR answer frameworks based on this JD.
+            </div>
+            <template v-if="analysis.interview_questions?.length">
+              <v-alert type="success" variant="tonal" density="compact" class="mb-3">
+                {{ analysis.interview_questions.length }} questions ready!
+              </v-alert>
+              <v-btn variant="tonal" prepend-icon="mdi-eye" @click="showInterview = !showInterview">
+                {{ showInterview ? 'Hide' : 'Show Questions' }}
+              </v-btn>
+            </template>
+            <template v-else-if="interviewPolling">
+              <v-progress-linear indeterminate color="indigo" class="mb-2" rounded />
+              <div class="text-body-2 text-medium-emphasis">Generating questions...</div>
+            </template>
+            <template v-else>
+              <v-btn color="indigo" variant="flat" prepend-icon="mdi-creation" @click="requestInterviewPrep" :loading="interviewLoading">
+                {{ authStore.paymentsEnabled ? 'Generate Questions (1 credit)' : 'Generate Questions' }}
+              </v-btn>
+            </template>
+            <v-alert v-if="interviewError" type="error" density="compact" class="mt-2">{{ interviewError }}</v-alert>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Interview Questions Accordion -->
+      <v-expansion-panels v-if="showInterview && analysis.interview_questions?.length" class="mb-6">
+        <v-expansion-panel v-for="(q, i) in analysis.interview_questions" :key="i">
+          <v-expansion-panel-title>
+            <span class="font-weight-medium">{{ i + 1 }}. {{ q.question }}</span>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <div class="mb-2">
+              <span class="font-weight-bold text-indigo">Why they ask:</span>
+              <span class="text-body-2 ml-1">{{ q.why_asked }}</span>
+            </div>
+            <div>
+              <span class="font-weight-bold text-success">Answer framework:</span>
+              <div class="text-body-2 mt-1" style="white-space:pre-wrap">{{ q.answer_framework }}</div>
+            </div>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+
       <!-- Keyword Heatmap -->
-      <v-card v-if="analysis.keyword_matches?.length" elevation="2" rounded="lg" class="mb-4 pa-4">
-        <div class="text-h6 font-weight-bold mb-3">
-          <v-icon icon="mdi-fire" color="deep-orange" class="mr-2" />Keyword Match Heatmap
-        </div>
-        <div class="text-body-2 text-medium-emphasis mb-3">
-          {{ foundCount }}/{{ analysis.keyword_matches.length }} keywords found in your resume
+      <v-card v-if="analysis.keyword_matches?.length" elevation="0" class="mb-6 pa-5 section-card">
+        <div class="d-flex align-center mb-3" style="gap: 8px;">
+          <v-icon icon="mdi-fire" color="primary" size="24" />
+          <div class="text-h6 font-weight-bold">Keyword Match Heatmap</div>
+          <v-spacer />
+          <v-chip variant="tonal" :color="foundRatio >= 0.7 ? 'success' : foundRatio >= 0.4 ? 'warning' : 'error'" size="small">
+            {{ foundCount }}/{{ analysis.keyword_matches.length }} found
+          </v-chip>
         </div>
         <div class="d-flex flex-wrap ga-2">
           <v-tooltip v-for="kw in analysis.keyword_matches" :key="kw.keyword" :text="kw.found ? 'Found in resume' : `Missing — add to: ${kw.section_hint}`" location="top">
@@ -78,15 +189,18 @@
       </v-card>
 
       <!-- ATS flags -->
-      <v-card v-if="analysis.ats_flags?.length" elevation="2" rounded="lg" class="mb-4 pa-4">
-        <div class="text-h6 font-weight-bold mb-3">
-          <v-icon icon="mdi-robot-confused" color="orange" class="mr-2" />ATS Issues
+      <v-card v-if="analysis.ats_flags?.length" elevation="0" class="mb-6 pa-5 section-card">
+        <div class="d-flex align-center mb-3" style="gap: 8px;">
+          <v-icon icon="mdi-robot-confused" color="warning" size="24" />
+          <div class="text-h6 font-weight-bold">ATS Issues</div>
+          <v-spacer />
+          <v-chip color="warning" variant="tonal" size="small">{{ analysis.ats_flags.length }} found</v-chip>
         </div>
         <div class="d-flex flex-wrap ga-2">
           <v-chip
             v-for="flag in analysis.ats_flags"
             :key="flag"
-            color="orange"
+            color="warning"
             variant="tonal"
             prepend-icon="mdi-alert"
           >
@@ -94,51 +208,54 @@
           </v-chip>
         </div>
       </v-card>
-      <v-alert v-else type="success" variant="tonal" class="mb-4">
-        No ATS issues detected.
+      <v-alert v-else type="success" variant="tonal" class="mb-6" density="comfortable">
+        <template #prepend>
+          <v-icon icon="mdi-check-circle" />
+        </template>
+        No ATS issues detected — your resume formatting looks good!
       </v-alert>
 
-      <!-- Rewritten bullets -->
-      <v-expansion-panels v-if="analysis.rewritten_bullets?.length" class="mb-4">
-        <v-expansion-panel>
-          <v-expansion-panel-title>
-            <v-icon icon="mdi-pencil-box" color="primary" class="mr-2" />
-            Rewritten Bullets ({{ analysis.rewritten_bullets.length }})
-          </v-expansion-panel-title>
-          <v-expansion-panel-text>
-            <v-list>
-              <v-list-item
-                v-for="(bullet, i) in analysis.rewritten_bullets"
-                :key="i"
-                class="px-0"
-              >
-                <template #prepend>
-                  <v-icon icon="mdi-check-circle" color="success" />
-                </template>
-                <v-list-item-title class="text-body-2 text-wrap">{{ bullet }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-expansion-panel-text>
-        </v-expansion-panel>
-      </v-expansion-panels>
+      <!-- Rewritten bullets — visible by default -->
+      <v-card v-if="analysis.rewritten_bullets?.length" elevation="0" class="mb-6 pa-5 section-card">
+        <div class="d-flex align-center mb-3" style="gap: 8px;">
+          <v-icon icon="mdi-pencil-box" color="primary" size="24" />
+          <div class="text-h6 font-weight-bold">Rewritten Bullets</div>
+          <v-spacer />
+          <v-chip variant="tonal" color="primary" size="small">{{ analysis.rewritten_bullets.length }} improved</v-chip>
+        </div>
+        <v-list density="compact">
+          <v-list-item
+            v-for="(bullet, i) in analysis.rewritten_bullets"
+            :key="i"
+            class="px-0"
+          >
+            <template #prepend>
+              <v-icon icon="mdi-check-circle" color="success" size="20" />
+            </template>
+            <v-list-item-title class="text-body-2 text-wrap">{{ bullet }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-card>
 
       <!-- Cover letter -->
-      <v-card v-if="analysis.cover_letter" elevation="2" rounded="lg" class="pa-4 mb-4">
-        <div class="text-h6 font-weight-bold mb-3">
-          <v-icon icon="mdi-email-edit" color="primary" class="mr-2" />Cover Letter
+      <v-card v-if="analysis.cover_letter" elevation="0" class="pa-5 mb-6 section-card">
+        <div class="d-flex align-center mb-3" style="gap: 8px;">
+          <v-icon icon="mdi-email-edit" color="primary" size="24" />
+          <div class="text-h6 font-weight-bold">Cover Letter</div>
         </div>
         <div class="text-body-2" style="white-space: pre-wrap">{{ analysis.cover_letter }}</div>
-        <v-btn class="mt-4" variant="tonal" prepend-icon="mdi-content-copy" @click="copyText(analysis.cover_letter, 'coverCopied')">
-          {{ coverCopied ? 'Copied!' : 'Copy' }}
+        <v-btn class="mt-4" variant="tonal" prepend-icon="mdi-content-copy" @click="copyText(analysis.cover_letter)">
+          Copy
         </v-btn>
       </v-card>
 
       <!-- Follow-up Emails -->
-      <v-card v-if="analysis.follow_up_emails?.length" elevation="2" rounded="lg" class="pa-4 mb-4">
-        <div class="text-h6 font-weight-bold mb-3">
-          <v-icon icon="mdi-email-multiple" color="teal" class="mr-2" />Follow-Up Email Templates
+      <v-card v-if="analysis.follow_up_emails?.length" elevation="0" class="pa-5 mb-6 section-card">
+        <div class="d-flex align-center mb-3" style="gap: 8px;">
+          <v-icon icon="mdi-email-multiple" color="teal" size="24" />
+          <div class="text-h6 font-weight-bold">Follow-Up Email Templates</div>
         </div>
-        <v-tabs v-model="emailTab" color="teal">
+        <v-tabs v-model="emailTab" color="primary">
           <v-tab v-for="email in analysis.follow_up_emails" :key="email.type" :value="email.type">
             {{ emailLabel(email.type) }}
           </v-tab>
@@ -148,102 +265,25 @@
             <div class="pa-4">
               <div class="text-subtitle-2 font-weight-bold mb-2">Subject: {{ email.subject }}</div>
               <div class="text-body-2" style="white-space: pre-wrap">{{ email.body }}</div>
-              <v-btn class="mt-3" size="small" variant="tonal" prepend-icon="mdi-content-copy" @click="copyText(email.body, 'emailCopied')">
-                {{ emailCopied ? 'Copied!' : 'Copy' }}
+              <v-btn class="mt-3" size="small" variant="tonal" prepend-icon="mdi-content-copy" @click="copyText(email.body)">
+                Copy
               </v-btn>
             </div>
           </v-tabs-window-item>
         </v-tabs-window>
       </v-card>
 
-      <!-- Premium Actions: Resume Rewrite + Interview Prep -->
-      <v-row class="mb-4">
-        <v-col cols="12" md="6">
-          <v-card elevation="2" rounded="lg" class="pa-4 h-100">
-            <div class="text-h6 font-weight-bold mb-2">
-              <v-icon icon="mdi-file-document-edit" color="deep-purple" class="mr-2" />Full Resume Rewrite
-            </div>
-            <div class="text-body-2 text-medium-emphasis mb-4">
-              AI rewrites your entire resume, optimized for this specific job description. Download as PDF.
-            </div>
-            <template v-if="analysis.rewritten_resume_text">
-              <v-alert type="success" variant="tonal" density="compact" class="mb-3">Rewrite ready!</v-alert>
-              <div class="d-flex ga-2">
-                <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-download" @click="downloadPDF" :loading="downloading">
-                  Download PDF
-                </v-btn>
-                <v-btn variant="tonal" prepend-icon="mdi-eye" @click="showRewrite = !showRewrite">
-                  {{ showRewrite ? 'Hide' : 'Preview' }}
-                </v-btn>
-              </div>
-              <div v-if="showRewrite" class="mt-3 pa-3 rounded bg-grey-lighten-4" style="white-space:pre-wrap;font-size:0.85rem;">{{ analysis.rewritten_resume_text }}</div>
-            </template>
-            <template v-else-if="rewritePolling">
-              <v-progress-linear indeterminate color="deep-purple" class="mb-2" />
-              <div class="text-body-2">Generating rewrite...</div>
-            </template>
-            <template v-else>
-              <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-creation" @click="requestRewrite" :loading="rewriteLoading">
-                {{ authStore.paymentsEnabled ? 'Generate Rewrite (1 credit)' : 'Generate Rewrite' }}
-              </v-btn>
-            </template>
-            <v-alert v-if="rewriteError" type="error" density="compact" class="mt-2">{{ rewriteError }}</v-alert>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="6">
-          <v-card elevation="2" rounded="lg" class="pa-4 h-100">
-            <div class="text-h6 font-weight-bold mb-2">
-              <v-icon icon="mdi-account-question" color="indigo" class="mr-2" />Interview Prep
-            </div>
-            <div class="text-body-2 text-medium-emphasis mb-4">
-              Get 8-10 likely interview questions with STAR answer frameworks based on this JD.
-            </div>
-            <template v-if="analysis.interview_questions?.length">
-              <v-alert type="success" variant="tonal" density="compact" class="mb-3">
-                {{ analysis.interview_questions.length }} questions ready!
-              </v-alert>
-              <v-btn variant="tonal" prepend-icon="mdi-eye" @click="showInterview = !showInterview">
-                {{ showInterview ? 'Hide' : 'Show Questions' }}
-              </v-btn>
-            </template>
-            <template v-else-if="interviewPolling">
-              <v-progress-linear indeterminate color="indigo" class="mb-2" />
-              <div class="text-body-2">Generating questions...</div>
-            </template>
-            <template v-else>
-              <v-btn color="indigo" variant="flat" prepend-icon="mdi-creation" @click="requestInterviewPrep" :loading="interviewLoading">
-                {{ authStore.paymentsEnabled ? 'Generate Questions (1 credit)' : 'Generate Questions' }}
-              </v-btn>
-            </template>
-            <v-alert v-if="interviewError" type="error" density="compact" class="mt-2">{{ interviewError }}</v-alert>
-          </v-card>
-        </v-col>
-      </v-row>
-
-      <!-- Interview Questions Accordion -->
-      <v-expansion-panels v-if="showInterview && analysis.interview_questions?.length" class="mb-4">
-        <v-expansion-panel v-for="(q, i) in analysis.interview_questions" :key="i">
-          <v-expansion-panel-title>
-            <span class="font-weight-medium">{{ i + 1 }}. {{ q.question }}</span>
-          </v-expansion-panel-title>
-          <v-expansion-panel-text>
-            <div class="mb-2">
-              <span class="font-weight-bold text-indigo">Why they ask:</span>
-              <span class="text-body-2 ml-1">{{ q.why_asked }}</span>
-            </div>
-            <div>
-              <span class="font-weight-bold text-success">Answer framework:</span>
-              <div class="text-body-2 mt-1" style="white-space:pre-wrap">{{ q.answer_framework }}</div>
-            </div>
-          </v-expansion-panel-text>
-        </v-expansion-panel>
-      </v-expansion-panels>
+      <!-- Bottom actions -->
+      <div class="d-flex ga-3 flex-wrap">
+        <v-btn variant="tonal" prepend-icon="mdi-arrow-left" to="/dashboard">Back to Dashboard</v-btn>
+        <v-btn variant="tonal" prepend-icon="mdi-plus" to="/analysis/new">Run Another Analysis</v-btn>
+      </div>
     </template>
   </v-container>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAnalysisStore } from '../stores/analysis'
 import { useAuthStore } from '../stores/auth'
@@ -252,11 +292,10 @@ import { analysisApi } from '../api/analysis'
 const route = useRoute()
 const analysisStore = useAnalysisStore()
 const authStore = useAuthStore()
+const notify = inject('notify', () => {})
 
 const analysis = computed(() => analysisStore.current)
 const polling = ref(false)
-const coverCopied = ref(false)
-const emailCopied = ref(false)
 const emailTab = ref(null)
 
 const showRewrite = ref(false)
@@ -269,6 +308,34 @@ const showInterview = ref(false)
 const interviewLoading = ref(false)
 const interviewPolling = ref(false)
 const interviewError = ref(null)
+
+// Animated loading steps
+const loadingSteps = [
+  'Parsing your resume',
+  'Reading job description',
+  'Scoring keyword match',
+  'Rewriting weak bullets',
+  'Generating cover letter',
+  'Finalizing report',
+]
+const currentStep = ref(0)
+let stepTimer = null
+
+function startLoadingSteps() {
+  currentStep.value = 0
+  stepTimer = setInterval(() => {
+    if (currentStep.value < loadingSteps.length - 1) {
+      currentStep.value++
+    }
+  }, 4000)
+}
+
+function stopLoadingSteps() {
+  if (stepTimer) {
+    clearInterval(stepTimer)
+    stepTimer = null
+  }
+}
 
 const scoreColor = computed(() => {
   const s = analysis.value?.match_score ?? 0
@@ -288,6 +355,11 @@ const foundCount = computed(() =>
   (analysis.value?.keyword_matches || []).filter(k => k.found).length
 )
 
+const foundRatio = computed(() => {
+  const matches = analysis.value?.keyword_matches || []
+  return matches.length ? foundCount.value / matches.length : 0
+})
+
 function emailLabel(type) {
   const labels = {
     application_follow_up: 'Follow-Up',
@@ -297,15 +369,9 @@ function emailLabel(type) {
   return labels[type] || type
 }
 
-async function copyText(text, flagName) {
+async function copyText(text) {
   await navigator.clipboard.writeText(text)
-  if (flagName === 'coverCopied') {
-    coverCopied.value = true
-    setTimeout(() => (coverCopied.value = false), 2000)
-  } else {
-    emailCopied.value = true
-    setTimeout(() => (emailCopied.value = false), 2000)
-  }
+  notify('Copied to clipboard')
 }
 
 async function requestRewrite() {
@@ -377,11 +443,50 @@ onMounted(async () => {
 
   if (data.status === 'pending' || data.status === 'processing') {
     polling.value = true
+    startLoadingSteps()
     try {
       await analysisStore.pollAnalysis(id)
     } finally {
       polling.value = false
+      stopLoadingSteps()
     }
   }
 })
+
+onUnmounted(() => {
+  stopLoadingSteps()
+})
 </script>
+
+<style scoped>
+.score-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.section-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.premium-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, rgba(230, 74, 25, 0.02), rgba(63, 81, 181, 0.02));
+}
+
+.pulse-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>
