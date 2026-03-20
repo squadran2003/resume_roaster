@@ -114,7 +114,7 @@ let turnstileWidgetId = null
 const brandPoints = computed(() => {
   const points = ['Results in under 30 seconds', '7 AI-powered tools']
   if (auth.paymentsEnabled) {
-    points.unshift('1 free credit on signup', 'No credit card required')
+    points.unshift('2 free credits on signup', 'No credit card required')
   }
   return points
 })

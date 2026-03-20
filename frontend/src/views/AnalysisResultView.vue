@@ -36,8 +36,57 @@
       <div class="d-flex align-center mb-6 flex-wrap ga-3">
         <h1 class="text-h4 font-weight-bold">Analysis Results</h1>
         <v-spacer />
+        <v-btn variant="tonal" prepend-icon="mdi-share-variant" :loading="shareLoading" @click="shareScoreCard">
+          {{ shareToken ? 'Copy Share Link' : 'Share Score Card' }}
+        </v-btn>
         <v-btn variant="tonal" prepend-icon="mdi-arrow-left" to="/dashboard">Dashboard</v-btn>
       </div>
+
+      <!-- Share dialog -->
+      <v-dialog v-model="shareDialog" max-width="520">
+        <v-card class="pa-6">
+          <div class="text-h6 font-weight-bold mb-4">Share Your Score Card</div>
+          <v-img
+            :src="shareImageUrl"
+            class="rounded-lg mb-4"
+            aspect-ratio="1.905"
+            cover
+          />
+          <v-text-field
+            :model-value="shareUrl"
+            readonly
+            density="compact"
+            variant="outlined"
+            append-inner-icon="mdi-content-copy"
+            @click:append-inner="copyShareLink"
+            class="mb-3"
+          />
+          <div class="d-flex ga-2 flex-wrap">
+            <v-btn
+              color="blue"
+              variant="flat"
+              size="small"
+              prepend-icon="mdi-linkedin"
+              :href="`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`"
+              target="_blank"
+            >
+              LinkedIn
+            </v-btn>
+            <v-btn
+              color="black"
+              variant="flat"
+              size="small"
+              prepend-icon="mdi-twitter"
+              :href="`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`"
+              target="_blank"
+            >
+              Twitter / X
+            </v-btn>
+            <v-spacer />
+            <v-btn variant="tonal" size="small" @click="shareDialog = false">Close</v-btn>
+          </div>
+        </v-card>
+      </v-dialog>
 
       <!-- Score hero row -->
       <v-row class="mb-6">
@@ -309,6 +358,22 @@ const interviewLoading = ref(false)
 const interviewPolling = ref(false)
 const interviewError = ref(null)
 
+const shareLoading = ref(false)
+const shareDialog = ref(false)
+const shareToken = ref(null)
+
+const shareUrl = computed(() =>
+  shareToken.value ? `${window.location.origin}/share/${shareToken.value}` : ''
+)
+const shareImageUrl = computed(() =>
+  shareToken.value ? `/api/v1/analysis/shared/${shareToken.value}/image.png` : ''
+)
+const shareText = computed(() => {
+  const score = analysis.value?.match_score ?? 0
+  const title = analysis.value?.job_title || 'a job'
+  return `I just scored ${score}/100 on my resume match for ${title}. How does yours stack up?`
+})
+
 // Animated loading steps
 const loadingSteps = [
   'Parsing your resume',
@@ -372,6 +437,26 @@ function emailLabel(type) {
 async function copyText(text) {
   await navigator.clipboard.writeText(text)
   notify('Copied to clipboard')
+}
+
+async function shareScoreCard() {
+  shareLoading.value = true
+  try {
+    if (!shareToken.value) {
+      const { data } = await analysisApi.getShareToken(route.params.id)
+      shareToken.value = data.share_token
+    }
+    shareDialog.value = true
+  } catch {
+    notify('Failed to generate share link')
+  } finally {
+    shareLoading.value = false
+  }
+}
+
+async function copyShareLink() {
+  await navigator.clipboard.writeText(shareUrl.value)
+  notify('Share link copied to clipboard')
 }
 
 async function requestRewrite() {
@@ -440,6 +525,10 @@ onMounted(async () => {
   const id = route.params.id
   const { data } = await analysisApi.get(id)
   analysisStore.current = data
+
+  if (data.share_token) {
+    shareToken.value = data.share_token
+  }
 
   if (data.status === 'pending' || data.status === 'processing') {
     polling.value = true

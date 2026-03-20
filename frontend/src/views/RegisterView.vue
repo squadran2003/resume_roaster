@@ -28,7 +28,7 @@
 
         <h1 class="text-h5 font-weight-bold mb-1">Create your account</h1>
         <p class="text-body-2 text-medium-emphasis mb-6">
-          {{ auth.paymentsEnabled ? 'Start with 1 free credit — no card required' : 'Get started with AI-powered resume analysis' }}
+          {{ auth.paymentsEnabled ? 'Start with 2 free credits — no card required' : 'Get started with AI-powered resume analysis' }}
         </p>
 
         <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
@@ -102,7 +102,7 @@ import GoogleSignInButton from '../components/GoogleSignInButton.vue'
 useHead({
   title: 'Create Account - Resume Roaster | Free AI Resume Analysis',
   meta: [
-    { name: 'description', content: 'Create a free Resume Roaster account. Get 1 free credit to analyze your resume with AI — no credit card required.' },
+    { name: 'description', content: 'Create a free Resume Roaster account. Get 2 free credits to analyze your resume with AI — no credit card required.' },
     { property: 'og:title', content: 'Create Account - Resume Roaster | Free AI Resume Analysis' },
     { property: 'og:url', content: 'https://resume-roaster.com/register' },
   ],
@@ -131,7 +131,7 @@ let turnstileWidgetId = null
 const brandPoints = computed(() => {
   const points = ['Results in under 30 seconds', '7 AI-powered tools']
   if (auth.paymentsEnabled) {
-    points.unshift('1 free credit on signup', 'No credit card required')
+    points.unshift('2 free credits on signup', 'No credit card required')
   }
   return points
 })

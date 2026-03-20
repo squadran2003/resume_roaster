@@ -17,6 +17,11 @@ const routes = [
     component: () => import('../views/RegisterView.vue'),
     meta: { public: true, guestOnly: true },
   },
+  {
+    path: '/share/:token',
+    component: () => import('../views/ShareView.vue'),
+    meta: { public: true },
+  },
   { path: '/dashboard', component: () => import('../views/DashboardView.vue') },
   { path: '/upload', component: () => import('../views/UploadResumeView.vue') },
   { path: '/analysis/new', component: () => import('../views/NewAnalysisView.vue') },

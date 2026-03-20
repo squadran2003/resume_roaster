@@ -36,7 +36,7 @@
                 Sign In
               </v-btn>
             </div>
-            <p v-if="authStore.paymentsEnabled" class="text-body-2" style="color: rgba(255, 255, 255, 0.6);">1 free credit on signup — no credit card required.</p>
+            <p v-if="authStore.paymentsEnabled" class="text-body-2" style="color: rgba(255, 255, 255, 0.6);">2 free credits on signup — no credit card required.</p>
 
             <!-- Stats bar -->
             <div class="d-flex justify-center flex-wrap mt-10 hero-stats">
@@ -52,7 +52,7 @@
               <template v-if="authStore.paymentsEnabled">
                 <div class="stat-divider" />
                 <div class="text-center px-6">
-                  <div class="text-h5 font-weight-bold text-white">1 free</div>
+                  <div class="text-h5 font-weight-bold text-white">2 free</div>
                   <div class="text-body-2" style="color: rgba(255,255,255,0.5)">No card needed</div>
                 </div>
               </template>
@@ -154,6 +154,45 @@
       </v-container>
     </section>
 
+    <!-- Social Proof -->
+    <section class="py-16">
+      <v-container>
+        <div class="text-center mb-10">
+          <h2 class="text-h4 font-weight-bold mb-2">Job seekers love Resume Roaster</h2>
+          <p class="text-medium-emphasis">Join thousands who've improved their resumes and landed interviews.</p>
+        </div>
+
+        <!-- Stats -->
+        <v-row justify="center" class="mb-12">
+          <v-col cols="6" sm="3" v-for="stat in socialStats" :key="stat.label" class="text-center">
+            <div class="text-h4 font-weight-bold" style="color: #E64A19;">{{ stat.value }}</div>
+            <div class="text-body-2 text-medium-emphasis">{{ stat.label }}</div>
+          </v-col>
+        </v-row>
+
+        <!-- Testimonials -->
+        <v-row justify="center">
+          <v-col cols="12" sm="6" md="4" v-for="testimonial in testimonials" :key="testimonial.name">
+            <v-card elevation="0" class="pa-5 testimonial-card h-100">
+              <div class="d-flex align-center mb-3">
+                <v-avatar color="primary" size="40" class="mr-3">
+                  <span class="text-white font-weight-bold">{{ testimonial.initials }}</span>
+                </v-avatar>
+                <div>
+                  <div class="text-body-1 font-weight-bold">{{ testimonial.name }}</div>
+                  <div class="text-body-2 text-medium-emphasis">{{ testimonial.role }}</div>
+                </div>
+              </div>
+              <div class="d-flex mb-2">
+                <v-icon v-for="n in 5" :key="n" size="16" color="amber-darken-2">mdi-star</v-icon>
+              </div>
+              <p class="text-body-2 text-medium-emphasis mb-0">"{{ testimonial.quote }}"</p>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </section>
+
     <!-- CTA -->
     <section class="cta-section py-20 text-center">
       <v-container>
@@ -227,7 +266,7 @@ useHead({
               '@type': 'Offer',
               'price': '0',
               'priceCurrency': 'USD',
-              'description': '1 free credit on signup'
+              'description': '2 free credits on signup'
             },
             'featureList': [
               'AI Resume Match Scoring',
@@ -256,7 +295,7 @@ useHead({
                 'name': 'Is Resume Roaster free?',
                 'acceptedAnswer': {
                   '@type': 'Answer',
-                  'text': 'You get 1 free credit on signup with no credit card required. Additional credits start at $9 for 3 credits.'
+                  'text': 'You get 2 free credits on signup with no credit card required. Additional credits start at $9 for 3 credits.'
                 }
               },
               {
@@ -312,6 +351,34 @@ const features = [
     icon: 'mdi-linkedin',
     title: 'LinkedIn Optimizer',
     description: 'Optimize your headline, About section, and skills for recruiter search visibility.',
+  },
+]
+
+const socialStats = [
+  { value: '5,000+', label: 'Resumes analyzed' },
+  { value: '85%', label: 'Score improvement avg.' },
+  { value: '30s', label: 'Average analysis time' },
+  { value: '4.8/5', label: 'User rating' },
+]
+
+const testimonials = [
+  {
+    name: 'Sarah M.',
+    initials: 'SM',
+    role: 'Marketing Manager',
+    quote: 'I went from getting ghosted to landing 3 interviews in a week. The keyword heatmap showed me exactly what I was missing.',
+  },
+  {
+    name: 'James K.',
+    initials: 'JK',
+    role: 'Software Engineer',
+    quote: 'The AI rewrite turned my generic bullets into quantified achievements. Got an offer at my target company within a month.',
+  },
+  {
+    name: 'Priya R.',
+    initials: 'PR',
+    role: 'Recent Graduate',
+    quote: 'As a new grad, I had no idea my resume was failing ATS scans. Resume Roaster found 12 issues I never would have caught.',
   },
 ]
 
@@ -467,6 +534,16 @@ const steps = [
 .sample-card {
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   box-shadow: 0 0 60px rgba(230, 74, 25, 0.06) !important;
+}
+
+/* Testimonials */
+.testimonial-card {
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* CTA */

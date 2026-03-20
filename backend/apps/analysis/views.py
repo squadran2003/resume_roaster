@@ -1,4 +1,6 @@
+import io
 import logging
+import secrets
 import uuid as uuid_mod
 
 from django.conf import settings as django_settings
@@ -9,6 +11,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -352,3 +355,158 @@ class LinkedInDetailView(APIView):
     def get(self, request, pk):
         obj = get_object_or_404(LinkedInAnalysis, id=pk, user=request.user)
         return Response(LinkedInAnalysisSerializer(obj).data)
+
+
+class ShareTokenView(APIView):
+    """Generate or retrieve a share token for an analysis."""
+
+    def post(self, request, pk):
+        result = get_object_or_404(
+            AnalysisResult, id=pk, resume__user=request.user, status=AnalysisResult.Status.DONE,
+        )
+        if not result.share_token:
+            result.share_token = secrets.token_urlsafe(16)
+            result.save(update_fields=["share_token"])
+        return Response({"share_token": result.share_token})
+
+
+class PublicShareView(APIView):
+    """Public endpoint returning limited analysis data for a shared score card."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, token):
+        result = get_object_or_404(
+            AnalysisResult, share_token=token, status=AnalysisResult.Status.DONE,
+        )
+        keyword_matches = result.keyword_matches or []
+        found = sum(1 for k in keyword_matches if k.get("found"))
+        data = {
+            "match_score": result.match_score,
+            "hire_probability": result.hire_probability,
+            "job_title": result.job_description.title,
+            "company": result.job_description.company,
+            "keywords_found": found,
+            "keywords_total": len(keyword_matches),
+            "ats_issues": len(result.ats_flags or []),
+            "created_at": result.created_at,
+        }
+        return Response(data)
+
+
+class ScoreCardImageView(APIView):
+    """Generate a branded PNG score card image for social sharing. Public endpoint."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, token):
+        result = get_object_or_404(
+            AnalysisResult, share_token=token, status=AnalysisResult.Status.DONE,
+        )
+
+        from PIL import Image, ImageDraw, ImageFont
+
+        W, H = 1200, 630
+        img = Image.new("RGB", (W, H), "#0d0d1a")
+        draw = ImageDraw.Draw(img)
+
+        # Fonts — use default; will look fine for OG images
+        try:
+            font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+            font_md = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+            font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
+            font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
+        except OSError:
+            font_lg = ImageFont.load_default()
+            font_md = font_lg
+            font_sm = font_lg
+            font_xs = font_lg
+
+        # Background gradient effect — draw colored rectangles
+        for i in range(H):
+            r = int(13 + (15 * i / H))
+            g = int(13 + (52 * i / H))
+            b = int(26 + (96 * i / H))
+            draw.line([(0, i), (W, i)], fill=(r, g, b))
+
+        # Score circle
+        score = result.match_score or 0
+        cx, cy, radius = 300, 280, 120
+        if score >= 75:
+            score_color = "#4CAF50"
+        elif score >= 50:
+            score_color = "#FF9800"
+        else:
+            score_color = "#F44336"
+
+        # Draw circle background
+        draw.ellipse(
+            [cx - radius, cy - radius, cx + radius, cy + radius],
+            outline="#ffffff30", width=8,
+        )
+        # Draw score arc
+        arc_end = int(score * 3.6) - 90
+        draw.arc(
+            [cx - radius, cy - radius, cx + radius, cy + radius],
+            start=-90, end=arc_end, fill=score_color, width=12,
+        )
+        # Score text
+        score_text = str(score)
+        bbox = draw.textbbox((0, 0), score_text, font=font_lg)
+        tw = bbox[2] - bbox[0]
+        th = bbox[3] - bbox[1]
+        draw.text((cx - tw // 2, cy - th // 2 - 10), score_text, fill="white", font=font_lg)
+        # "/100" below
+        bbox2 = draw.textbbox((0, 0), "/100", font=font_sm)
+        tw2 = bbox2[2] - bbox2[0]
+        draw.text((cx - tw2 // 2, cy + th // 2 + 5), "/100", fill="#ffffff99", font=font_sm)
+
+        # Right side info
+        rx = 520
+        # Title
+        draw.text((rx, 100), "Resume Roaster", fill="#E64A19", font=font_md)
+        draw.text((rx, 150), "AI Resume Analysis", fill="#ffffff99", font=font_xs)
+
+        # Job info
+        job_title = result.job_description.title or "Job Position"
+        company = result.job_description.company
+        job_line = job_title[:40]
+        if company:
+            job_line += f" @ {company[:25]}"
+        draw.text((rx, 220), job_line, fill="white", font=font_sm)
+
+        # Stats
+        hire_pct = int((result.hire_probability or 0) * 100)
+        keyword_matches = result.keyword_matches or []
+        found = sum(1 for k in keyword_matches if k.get("found"))
+        total = len(keyword_matches)
+        ats_count = len(result.ats_flags or [])
+
+        stats = [
+            (f"Hire Probability: {hire_pct}%", "#4CAF50" if hire_pct >= 60 else "#FF9800" if hire_pct >= 35 else "#F44336"),
+            (f"Keywords: {found}/{total} matched", "#4CAF50" if total and found / total >= 0.7 else "#FF9800"),
+            (f"ATS Issues: {ats_count}", "#4CAF50" if ats_count == 0 else "#FF9800"),
+        ]
+        for i, (text, color) in enumerate(stats):
+            y = 290 + i * 50
+            draw.rounded_rectangle([rx, y, rx + 16, y + 28], radius=4, fill=color)
+            draw.text((rx + 28, y - 2), text, fill="white", font=font_xs)
+
+        # CTA
+        draw.text((rx, 480), "Roast your resume too!", fill="#E64A19", font=font_md)
+        draw.text((rx, 530), "resume-roaster.com", fill="#ffffff80", font=font_xs)
+
+        # Fire emoji placeholder (orange circle)
+        draw.ellipse([50, 50, 90, 90], fill="#E64A19")
+        draw.text((100, 52), "Resume Roaster", fill="white", font=font_md)
+
+        buf = io.BytesIO()
+        img.save(buf, format="PNG", optimize=True)
+        buf.seek(0)
+
+        response = HttpResponse(buf.read(), content_type="image/png")
+        response["Content-Length"] = buf.tell()
+        response["Cache-Control"] = "public, max-age=86400"
+        return response

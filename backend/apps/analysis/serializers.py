@@ -29,6 +29,7 @@ class AnalysisResultSerializer(serializers.ModelSerializer):
             "follow_up_emails",
             "interview_questions",
             "rewritten_resume_text",
+            "share_token",
             "job_title",
             "company",
             "resume_filename",

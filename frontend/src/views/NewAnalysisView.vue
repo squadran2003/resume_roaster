@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useResumeStore } from '../stores/resume'
 import { useAnalysisStore } from '../stores/analysis'
@@ -97,6 +97,12 @@ const rules = {
 }
 
 onMounted(() => resumeStore.fetchResumes())
+
+watchEffect(() => {
+  if (!selectedResume.value && resumeStore.resumes.length === 1) {
+    selectedResume.value = resumeStore.resumes[0].id
+  }
+})
 
 async function submit() {
   loading.value = true

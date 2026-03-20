@@ -8,8 +8,11 @@ from .views import (
     InterviewPrepView,
     LinkedInAnalyzeView,
     LinkedInDetailView,
+    PublicShareView,
     ResumeRewritePDFView,
     ResumeRewriteView,
+    ScoreCardImageView,
+    ShareTokenView,
 )
 
 urlpatterns = [
@@ -20,6 +23,9 @@ urlpatterns = [
     path("<uuid:pk>/rewrite/", ResumeRewriteView.as_view(), name="analysis-rewrite"),
     path("<uuid:pk>/rewrite/pdf/", ResumeRewritePDFView.as_view(), name="analysis-rewrite-pdf"),
     path("<uuid:pk>/interview-prep/", InterviewPrepView.as_view(), name="analysis-interview-prep"),
+    path("<uuid:pk>/share/", ShareTokenView.as_view(), name="analysis-share"),
+    path("shared/<str:token>/", PublicShareView.as_view(), name="analysis-public-share"),
+    path("shared/<str:token>/image.png", ScoreCardImageView.as_view(), name="analysis-share-image"),
     path("linkedin/", LinkedInAnalyzeView.as_view(), name="linkedin-analyze"),
     path("linkedin/<uuid:pk>/", LinkedInDetailView.as_view(), name="linkedin-detail"),
 ]

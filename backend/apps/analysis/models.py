@@ -1,3 +1,4 @@
+import secrets
 import uuid
 
 from django.conf import settings
@@ -63,6 +64,11 @@ class AnalysisResult(models.Model):
     interview_questions = models.JSONField(
         default=list, blank=True,
         help_text='[{"question": str, "why_asked": str, "answer_framework": str}]',
+    )
+
+    share_token = models.CharField(
+        max_length=32, unique=True, blank=True, null=True,
+        help_text="Public token for sharing score card",
     )
 
     error_message = models.TextField(blank=True)

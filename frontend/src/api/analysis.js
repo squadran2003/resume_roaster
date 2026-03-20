@@ -9,6 +9,8 @@ export const analysisApi = {
   requestRewrite: (id) => client.post(`/analysis/${id}/rewrite/`),
   downloadRewritePDF: (id) => client.get(`/analysis/${id}/rewrite/pdf/`, { responseType: 'blob' }),
   requestInterviewPrep: (id) => client.post(`/analysis/${id}/interview-prep/`),
+  getShareToken: (id) => client.post(`/analysis/${id}/share/`),
+  getPublicShare: (token) => client.get(`/analysis/shared/${token}/`),
   linkedinAnalyze: (data) => client.post('/analysis/linkedin/', data),
   linkedinGet: (id) => client.get(`/analysis/linkedin/${id}/`),
 }
