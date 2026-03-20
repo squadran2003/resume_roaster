@@ -49,11 +49,13 @@
                 <div class="text-h5 font-weight-bold text-white">&lt;30s</div>
                 <div class="text-body-2" style="color: rgba(255,255,255,0.5)">Analysis time</div>
               </div>
-              <div class="stat-divider" />
-              <div class="text-center px-6">
-                <div class="text-h5 font-weight-bold text-white">1 free</div>
-                <div class="text-body-2" style="color: rgba(255,255,255,0.5)">No card needed</div>
-              </div>
+              <template v-if="authStore.paymentsEnabled">
+                <div class="stat-divider" />
+                <div class="text-center px-6">
+                  <div class="text-h5 font-weight-bold text-white">1 free</div>
+                  <div class="text-body-2" style="color: rgba(255,255,255,0.5)">No card needed</div>
+                </div>
+              </template>
             </div>
           </div>
         </Transition>
