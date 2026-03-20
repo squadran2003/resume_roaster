@@ -362,7 +362,7 @@ const shareLoading = ref(false)
 const shareDialog = ref(false)
 const shareToken = ref(null)
 
-const backendUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/api\/v1\/?$/, '')
+const backendUrl = (import.meta.env.FRONTEND_URL || '/api/v1').replace(/\/api\/v1\/?$/, '')
 const shareUrl = computed(() =>
   shareToken.value ? `${backendUrl}/share/${shareToken.value}/` : ''
 )
