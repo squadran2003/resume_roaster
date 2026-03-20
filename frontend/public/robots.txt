@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Disallow authenticated app routes
+Disallow: /dashboard
+Disallow: /upload
+Disallow: /analysis/
+Disallow: /linkedin
+Disallow: /account
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://resume-roaster.com/sitemap.xml

@@ -52,9 +52,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useHead } from '@unhead/vue'
 import { useAuthStore } from '../stores/auth'
 import { authApi } from '../api/auth'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
+
+useHead({
+  title: 'Sign In - Resume Roaster',
+  meta: [
+    { name: 'description', content: 'Sign in to Resume Roaster to access AI-powered resume analysis, ATS checking, and cover letter generation.' },
+    { property: 'og:title', content: 'Sign In - Resume Roaster' },
+    { property: 'og:url', content: 'https://resume-roaster.com/login' },
+  ],
+  link: [
+    { rel: 'canonical', href: 'https://resume-roaster.com/login' },
+  ],
+})
 
 const router = useRouter()
 const auth = useAuthStore()

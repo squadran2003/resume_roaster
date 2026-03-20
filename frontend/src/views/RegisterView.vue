@@ -64,9 +64,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useHead } from '@unhead/vue'
 import { useAuthStore } from '../stores/auth'
 import { authApi } from '../api/auth'
 import GoogleSignInButton from '../components/GoogleSignInButton.vue'
+
+useHead({
+  title: 'Create Account - Resume Roaster | Free AI Resume Analysis',
+  meta: [
+    { name: 'description', content: 'Create a free Resume Roaster account. Get 1 free credit to analyze your resume with AI — no credit card required.' },
+    { property: 'og:title', content: 'Create Account - Resume Roaster | Free AI Resume Analysis' },
+    { property: 'og:url', content: 'https://resume-roaster.com/register' },
+  ],
+  link: [
+    { rel: 'canonical', href: 'https://resume-roaster.com/register' },
+  ],
+})
 
 const router = useRouter()
 const auth = useAuthStore()

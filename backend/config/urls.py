@@ -22,6 +22,8 @@ urlpatterns = [
     path("api/v1/resumes/", include("apps.resumes.urls")),
     path("api/v1/analysis/", include("apps.analysis.urls")),
     path("api/v1/payments/", include("apps.payments.urls")),
+    # SEO
+    path("", include("apps.seo.urls")),
 ]
 
 if settings.DEBUG:

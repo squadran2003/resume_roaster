@@ -166,7 +166,85 @@
 </template>
 
 <script setup>
+import { useHead } from '@unhead/vue'
 import { useAuthStore } from '@/stores/auth'
+
+useHead({
+  title: 'Resume Roaster - AI Resume Analyzer & ATS Checker',
+  meta: [
+    { name: 'description', content: 'Upload your resume and job description. Get an AI-powered match score, ATS keyword analysis, bullet rewrites, cover letter, and full resume rewrite in seconds.' },
+    { property: 'og:title', content: 'Resume Roaster - AI Resume Analyzer & ATS Checker' },
+    { property: 'og:description', content: 'Upload your resume and job description. Get an AI-powered match score, ATS keyword analysis, bullet rewrites, cover letter, and full resume rewrite in seconds.' },
+    { property: 'og:url', content: 'https://resume-roaster.com/' },
+    { property: 'og:type', content: 'website' },
+  ],
+  link: [
+    { rel: 'canonical', href: 'https://resume-roaster.com/' },
+  ],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'WebApplication',
+            'name': 'Resume Roaster',
+            'url': 'https://resume-roaster.com',
+            'description': 'AI-powered resume analyzer that scores job match, rewrites bullets, checks ATS compatibility, generates cover letters, and rewrites entire resumes.',
+            'applicationCategory': 'BusinessApplication',
+            'operatingSystem': 'Web',
+            'offers': {
+              '@type': 'Offer',
+              'price': '0',
+              'priceCurrency': 'USD',
+              'description': '1 free credit on signup'
+            },
+            'featureList': [
+              'AI Resume Match Scoring',
+              'ATS Keyword Heatmap',
+              'Bullet Point Rewriting',
+              'Full Resume Rewrite with PDF Export',
+              'Cover Letter Generation',
+              'Interview Prep Questions',
+              'LinkedIn Profile Optimization',
+              'Email Follow-Up Templates'
+            ]
+          },
+          {
+            '@type': 'FAQPage',
+            'mainEntity': [
+              {
+                '@type': 'Question',
+                'name': 'How does Resume Roaster work?',
+                'acceptedAnswer': {
+                  '@type': 'Answer',
+                  'text': 'Upload your resume (PDF or DOCX) and paste the job description. Our AI analyzes the match, scores compatibility 0-100, rewrites weak bullets, flags ATS issues, and generates a tailored cover letter — all in seconds.'
+                }
+              },
+              {
+                '@type': 'Question',
+                'name': 'Is Resume Roaster free?',
+                'acceptedAnswer': {
+                  '@type': 'Answer',
+                  'text': 'You get 1 free credit on signup with no credit card required. Additional credits start at $9 for 3 credits.'
+                }
+              },
+              {
+                '@type': 'Question',
+                'name': 'What is an ATS keyword check?',
+                'acceptedAnswer': {
+                  '@type': 'Answer',
+                  'text': 'ATS (Applicant Tracking System) software scans resumes for keywords from the job description. Resume Roaster shows exactly which keywords are present and which are missing with a color-coded heatmap.'
+                }
+              }
+            ]
+          }
+        ]
+      }),
+    },
+  ],
+})
 
 const authStore = useAuthStore()
 
