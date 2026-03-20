@@ -412,12 +412,34 @@ class ScoreCardImageView(APIView):
         img = Image.new("RGB", (W, H), "#0d0d1a")
         draw = ImageDraw.Draw(img)
 
-        # Fonts — use default; will look fine for OG images
+        # Fonts — try common paths (Debian, Nix, fallback)
+        def _find_font(name):
+            import subprocess
+            # Try fc-match first (works on both Debian and Nix with fontconfig)
+            try:
+                out = subprocess.run(
+                    ["fc-match", "-f", "%{file}", name],
+                    capture_output=True, text=True, timeout=5,
+                )
+                if out.returncode == 0 and out.stdout.strip():
+                    return out.stdout.strip()
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                pass
+            # Fallback to common Debian paths
+            import os
+            for prefix in ["/usr/share/fonts/truetype/dejavu", "/usr/share/fonts/TTF"]:
+                path = os.path.join(prefix, name)
+                if os.path.isfile(path):
+                    return path
+            return None
+
+        bold_path = _find_font("DejaVuSans-Bold.ttf")
+        regular_path = _find_font("DejaVuSans.ttf")
         try:
-            font_lg = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-            font_md = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-            font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
-            font_xs = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
+            font_lg = ImageFont.truetype(bold_path or "DejaVuSans-Bold", 72)
+            font_md = ImageFont.truetype(bold_path or "DejaVuSans-Bold", 36)
+            font_sm = ImageFont.truetype(regular_path or "DejaVuSans", 28)
+            font_xs = ImageFont.truetype(regular_path or "DejaVuSans", 22)
         except OSError:
             font_lg = ImageFont.load_default()
             font_md = font_lg

@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python312", "pango", "gobject-introspection", "gdk-pixbuf", "libffi", "harfbuzz", "fontconfig", "freetype"]
+nixPkgs = ["python312", "pango", "gobject-introspection", "gdk-pixbuf", "libffi", "harfbuzz", "fontconfig", "freetype", "dejavu_fonts"]
 
 [phases.install]
 cmds = ["pip install -r requirements/prod.txt"]
