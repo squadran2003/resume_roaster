@@ -362,12 +362,13 @@ const shareLoading = ref(false)
 const shareDialog = ref(false)
 const shareToken = ref(null)
 
-const backendUrl = (import.meta.env.FRONTEND_URL || '/api/v1').replace(/\/api\/v1\/?$/, '')
+const frontendUrl = window.location.origin
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/api\/v1\/?$/, '') || window.location.origin
 const shareUrl = computed(() =>
-  shareToken.value ? `${backendUrl}/share/${shareToken.value}/` : ''
+  shareToken.value ? `${frontendUrl}/share/${shareToken.value}/` : ''
 )
 const shareImageUrl = computed(() =>
-  shareToken.value ? `${backendUrl}/api/v1/analysis/shared/${shareToken.value}/image.png` : ''
+  shareToken.value ? `${apiBaseUrl}/api/v1/analysis/shared/${shareToken.value}/image.png` : ''
 )
 const shareText = computed(() => {
   const score = analysis.value?.match_score ?? 0
