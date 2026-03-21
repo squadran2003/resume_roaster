@@ -391,6 +391,7 @@ class PublicShareView(APIView):
             "keywords_total": len(keyword_matches),
             "ats_issues": len(result.ats_flags or []),
             "created_at": result.created_at,
+            "payments_enabled": django_settings.PAYMENTS_ENABLED,
         }
         return Response(data)
 

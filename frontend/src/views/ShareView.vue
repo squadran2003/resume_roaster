@@ -72,7 +72,7 @@
 
           <div class="mt-8">
             <h2 class="text-h5 font-weight-bold text-white mb-3">Want to score your resume?</h2>
-            <p class="text-white mb-6" style="opacity: 0.7;">Get your own AI-powered resume analysis — 2 free credits, no credit card required.</p>
+            <p v-if="data.payments_enabled" class="text-white mb-6" style="opacity: 0.7;">Get your own AI-powered resume analysis — 2 free credits, no credit card required.</p>
             <v-btn to="/register" color="primary" size="x-large" variant="flat" class="font-weight-bold px-10 hero-cta">
               Roast My Resume
             </v-btn>
