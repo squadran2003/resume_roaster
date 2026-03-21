@@ -108,14 +108,12 @@ const hireColor = computed(() => {
   return 'error'
 })
 
-onMounted(async () => {
-  try {
-    const res = await analysisApi.getPublicShare(route.params.token)
-    data.value = res.data
-
-    useHead({
-      title: `Resume Score: ${data.value.match_score}/100 — Resume Roaster`,
-      meta: [
+useHead(computed(() => ({
+  title: data.value.match_score != null
+    ? `Resume Score: ${data.value.match_score}/100 — Resume Roaster`
+    : 'Resume Roaster',
+  meta: data.value.match_score != null
+    ? [
         { property: 'og:title', content: `I scored ${data.value.match_score}/100 on my resume match!` },
         { property: 'og:description', content: `${data.value.match_score}/100 match score for ${data.value.job_title || 'a job position'}. Roast your resume too!` },
         { property: 'og:image', content: `${window.location.origin}/api/v1/analysis/shared/${route.params.token}/image.png` },
@@ -123,8 +121,14 @@ onMounted(async () => {
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: `I scored ${data.value.match_score}/100 on my resume match!` },
         { name: 'twitter:image', content: `${window.location.origin}/api/v1/analysis/shared/${route.params.token}/image.png` },
-      ],
-    })
+      ]
+    : [],
+})))
+
+onMounted(async () => {
+  try {
+    const res = await analysisApi.getPublicShare(route.params.token)
+    data.value = res.data
   } catch {
     error.value = true
   } finally {
