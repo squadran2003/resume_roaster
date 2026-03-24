@@ -245,6 +245,11 @@ useHead({
     { property: 'og:description', content: 'Upload your resume and job description. Get an AI-powered match score, ATS keyword analysis, bullet rewrites, cover letter, and full resume rewrite in seconds.' },
     { property: 'og:url', content: 'https://resume-roaster.com/' },
     { property: 'og:type', content: 'website' },
+    { property: 'og:image', content: 'https://resume-roaster.com/resume-roaster.png' },
+    { property: 'og:image:width', content: '1200' },
+    { property: 'og:image:height', content: '630' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:image', content: 'https://resume-roaster.com/resume-roaster.png' },
   ],
   link: [
     { rel: 'canonical', href: 'https://resume-roaster.com/' },
