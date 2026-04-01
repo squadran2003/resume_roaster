@@ -86,8 +86,33 @@ Rules:
 - Rewrite the professional summary/objective to target this specific role
 - Rewrite ALL experience bullet points with strong action verbs, quantified impact, and JD-relevant keywords
 - Keep the same chronological structure and job titles
-- Output ONLY the rewritten resume text in clean plain text format (no JSON, no markdown fences)
-- Use clear section headers: CONTACT, SUMMARY, EXPERIENCE, EDUCATION, SKILLS, etc.
+- Preserve ALL sections from the original resume — do not drop or merge sections
+
+Respond with ONLY a valid JSON object — no markdown fences, no explanation, no trailing text.
+Use exactly this schema:
+{{
+  "name": "<full name>",
+  "contact": "<email | phone | location | LinkedIn — pipe-separated>",
+  "summary": "<rewritten professional summary paragraph>",
+  "sections": [
+    {{
+      "title": "<section name, e.g. EXPERIENCE, EDUCATION, SKILLS, CERTIFICATIONS, PROJECTS>",
+      "entries": [
+        {{
+          "heading": "<entry title, e.g. 'Software Engineer' or 'B.S. Computer Science'>",
+          "subheading": "<company/school + date range + location, e.g. 'Acme Corp | Jan 2020 - Present | San Francisco, CA'>",
+          "bullets": ["<bullet point text>", "..."]
+        }}
+      ]
+    }}
+  ]
+}}
+
+Important:
+- For SKILLS sections, put skills as a single entry with heading "Skills" and each skill category as a bullet
+- For EDUCATION, put each degree as an entry with bullets for GPA, honors, relevant coursework etc.
+- Every section from the original resume MUST appear in the output
+- bullets array can be empty if the entry has no bullet points (e.g. a one-line skill entry)
 
 <resume>
 {safe_resume}
@@ -214,10 +239,42 @@ def run_analysis(resume_text: str, jd_text: str) -> dict:
         raise ValueError("AI returned a non-JSON response")
 
 
-def run_resume_rewrite(resume_text: str, jd_text: str) -> str:
-    """Return the full rewritten resume as plain text."""
+def run_resume_rewrite(resume_text: str, jd_text: str) -> dict:
+    """Return the structured rewritten resume as a dict."""
     prompt = build_resume_rewrite_prompt(resume_text, jd_text)
-    return _call_ai(prompt, max_tokens=4096, json_mode=False)
+    raw = _call_ai(prompt, max_tokens=4096, json_mode=True)
+    raw = _strip_fences(raw)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.error("AI returned non-JSON for resume rewrite (first 300 chars): %s", raw[:300])
+        raise ValueError("AI returned a non-JSON response for resume rewrite")
+    return data
+
+
+def flatten_rewrite_json(data: dict) -> str:
+    """Convert structured rewrite JSON to readable plain text."""
+    lines = []
+    if data.get("name"):
+        lines.append(data["name"])
+    if data.get("contact"):
+        lines.append(data["contact"])
+    lines.append("")
+    if data.get("summary"):
+        lines.append("SUMMARY")
+        lines.append(data["summary"])
+        lines.append("")
+    for section in data.get("sections", []):
+        lines.append(section.get("title", "").upper())
+        for entry in section.get("entries", []):
+            if entry.get("heading"):
+                lines.append(entry["heading"])
+            if entry.get("subheading"):
+                lines.append(entry["subheading"])
+            for bullet in entry.get("bullets", []):
+                lines.append(f"- {bullet}")
+            lines.append("")
+    return "\n".join(lines).strip()
 
 
 def run_interview_prep(resume_text: str, jd_text: str) -> list:

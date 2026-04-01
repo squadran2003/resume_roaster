@@ -8,6 +8,7 @@ export const analysisApi = {
   compare: (id1, id2) => client.get(`/analysis/compare/?ids=${id1},${id2}`),
   requestRewrite: (id) => client.post(`/analysis/${id}/rewrite/`),
   downloadRewritePDF: (id) => client.get(`/analysis/${id}/rewrite/pdf/`, { responseType: 'blob' }),
+  downloadRewriteDOCX: (id) => client.get(`/analysis/${id}/rewrite/docx/`, { responseType: 'blob' }),
   requestInterviewPrep: (id) => client.post(`/analysis/${id}/interview-prep/`),
   getShareToken: (id) => client.post(`/analysis/${id}/share/`),
   getPublicShare: (token) => client.get(`/analysis/shared/${token}/`),

@@ -4,7 +4,7 @@ import sentry_sdk
 from celery import shared_task
 from django.utils import timezone
 
-from .ai_service import run_analysis, run_interview_prep, run_linkedin_analysis, run_resume_rewrite
+from .ai_service import flatten_rewrite_json, run_analysis, run_interview_prep, run_linkedin_analysis, run_resume_rewrite
 from .models import AnalysisResult, LinkedInAnalysis
 
 logger = logging.getLogger(__name__)
@@ -69,12 +69,13 @@ def run_resume_rewrite_task(self, analysis_id: str):
         return
 
     try:
-        rewritten = run_resume_rewrite(
+        rewrite_data = run_resume_rewrite(
             result.resume.parsed_text,
             result.job_description.raw_text,
         )
-        result.rewritten_resume_text = rewritten
-        result.save(update_fields=["rewritten_resume_text"])
+        result.rewritten_resume_json = rewrite_data
+        result.rewritten_resume_text = flatten_rewrite_json(rewrite_data)
+        result.save(update_fields=["rewritten_resume_text", "rewritten_resume_json"])
     except Exception as exc:
         sentry_sdk.capture_exception(exc)
         logger.exception("Resume rewrite task failed for %s", analysis_id)

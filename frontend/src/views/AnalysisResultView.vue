@@ -140,8 +140,11 @@
             <template v-if="analysis.rewritten_resume_text">
               <v-alert type="success" variant="tonal" density="compact" class="mb-3">Rewrite ready!</v-alert>
               <div class="d-flex ga-2 flex-wrap">
-                <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-download" @click="downloadPDF" :loading="downloading">
+                <v-btn color="deep-purple" variant="flat" prepend-icon="mdi-file-pdf-box" @click="downloadPDF" :loading="downloading === 'pdf'">
                   Download PDF
+                </v-btn>
+                <v-btn v-if="isDocxUpload" color="deep-purple" variant="tonal" prepend-icon="mdi-file-word" @click="downloadDOCX" :loading="downloading === 'docx'">
+                  Download DOCX (Original Format)
                 </v-btn>
                 <v-btn variant="tonal" prepend-icon="mdi-eye" @click="showRewrite = !showRewrite">
                   {{ showRewrite ? 'Hide' : 'Preview' }}
@@ -351,7 +354,7 @@ const showRewrite = ref(false)
 const rewriteLoading = ref(false)
 const rewritePolling = ref(false)
 const rewriteError = ref(null)
-const downloading = ref(false)
+const downloading = ref(null)
 
 const showInterview = ref(false)
 const interviewLoading = ref(false)
@@ -427,6 +430,10 @@ const foundRatio = computed(() => {
   return matches.length ? foundCount.value / matches.length : 0
 })
 
+const isDocxUpload = computed(() =>
+  analysis.value?.resume_mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+)
+
 function emailLabel(type) {
   const labels = {
     application_follow_up: 'Follow-Up',
@@ -483,7 +490,7 @@ async function requestRewrite() {
 }
 
 async function downloadPDF() {
-  downloading.value = true
+  downloading.value = 'pdf'
   try {
     const { data } = await analysisApi.downloadRewritePDF(route.params.id)
     const url = window.URL.createObjectURL(data)
@@ -495,7 +502,24 @@ async function downloadPDF() {
   } catch {
     rewriteError.value = 'Failed to download PDF.'
   } finally {
-    downloading.value = false
+    downloading.value = null
+  }
+}
+
+async function downloadDOCX() {
+  downloading.value = 'docx'
+  try {
+    const { data } = await analysisApi.downloadRewriteDOCX(route.params.id)
+    const url = window.URL.createObjectURL(data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'tailored-resume.docx'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } catch {
+    rewriteError.value = 'Failed to download DOCX.'
+  } finally {
+    downloading.value = null
   }
 }
 

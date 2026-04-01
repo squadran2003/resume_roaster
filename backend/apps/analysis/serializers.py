@@ -14,6 +14,7 @@ class AnalysisResultSerializer(serializers.ModelSerializer):
     job_title = serializers.CharField(source="job_description.title", read_only=True)
     company = serializers.CharField(source="job_description.company", read_only=True)
     resume_filename = serializers.CharField(source="resume.original_filename", read_only=True)
+    resume_mime_type = serializers.CharField(source="resume.mime_type", read_only=True)
 
     class Meta:
         model = AnalysisResult
@@ -33,6 +34,7 @@ class AnalysisResultSerializer(serializers.ModelSerializer):
             "job_title",
             "company",
             "resume_filename",
+            "resume_mime_type",
             "created_at",
             "completed_at",
         ]

@@ -17,5 +17,7 @@ psycopg2-binary==2.9.*
 dj-database-url==2.*
 openai==2.21.0
 fpdf2==2.8.*
+weasyprint==62.*
+pydyf==0.11.*
 Pillow==10.*
 google-auth==2.29.*

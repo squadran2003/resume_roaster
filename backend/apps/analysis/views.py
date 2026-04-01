@@ -220,43 +220,70 @@ class ResumeRewriteView(APIView):
 
 
 class ResumeRewritePDFView(APIView):
-    """Download the rewritten resume as a formatted PDF."""
+    """Download the rewritten resume as a formatted PDF using WeasyPrint."""
 
     def get(self, request, pk):
         result = get_object_or_404(
             AnalysisResult, id=pk, resume__user=request.user,
         )
 
-        if not result.rewritten_resume_text:
+        if not result.rewritten_resume_text and not result.rewritten_resume_json:
             return Response(
                 {"detail": "No rewritten resume available. Generate one first."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        jd_title = result.job_description.title or "tailored"
+        filename = slugify(f"resume-{jd_title}")[:60] + ".pdf"
+
+        # Use structured JSON path (new rewrites) or fall back to legacy FPDF
+        if result.rewritten_resume_json:
+            pdf_bytes = self._render_weasyprint(result.rewritten_resume_json)
+        else:
+            pdf_bytes = self._render_fpdf_legacy(result.rewritten_resume_text)
+
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Length"] = len(pdf_bytes)
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    def _render_weasyprint(self, data):
+        from django.template.loader import render_to_string
+        from weasyprint import HTML
+
+        contact_parts = [p.strip() for p in (data.get("contact") or "").split("|") if p.strip()]
+        context = {
+            "name": data.get("name", ""),
+            "contact_parts": contact_parts,
+            "summary": data.get("summary", ""),
+            "sections": data.get("sections", []),
+        }
+        html_string = render_to_string("analysis/resume_pdf.html", context)
+        return HTML(string=html_string).write_pdf()
+
+    def _render_fpdf_legacy(self, text):
+        """Fallback for old rewrites that only have plain text."""
         import re
+
         from fpdf import FPDF
 
-        def strip_unsupported_chars(text):
-            """Remove emojis and other non-Latin1 characters unsupported by Helvetica."""
-            return re.sub(r'[^\x00-\xFF]', '', text).strip()
+        def strip_unsupported_chars(t):
+            return re.sub(r'[^\x00-\xFF]', '', t).strip()
 
         pdf_doc = FPDF()
         pdf_doc.set_margins(left=15, top=15, right=15)
         pdf_doc.set_auto_page_break(auto=True, margin=20)
         pdf_doc.add_page()
-
         bullet_indent = 8
 
-        lines = result.rewritten_resume_text.split("\n")
+        lines = text.split("\n")
         is_first_line = True
         for line in lines:
             stripped = strip_unsupported_chars(line)
             if not stripped:
                 pdf_doc.ln(4)
                 continue
-
             if is_first_line:
-                # Name line — centered, large
                 pdf_doc.set_font("Helvetica", "B", 16)
                 pdf_doc.set_text_color(26, 26, 46)
                 pdf_doc.set_x(pdf_doc.l_margin)
@@ -268,7 +295,6 @@ class ResumeRewritePDFView(APIView):
                 pdf_doc.set_text_color(26, 26, 46)
                 pdf_doc.set_x(pdf_doc.l_margin)
                 pdf_doc.cell(0, 7, stripped, new_x="LMARGIN", new_y="NEXT")
-                # Draw underline
                 pdf_doc.set_draw_color(230, 74, 25)
                 pdf_doc.set_line_width(0.5)
                 y = pdf_doc.get_y()
@@ -285,12 +311,45 @@ class ResumeRewritePDFView(APIView):
                 pdf_doc.set_x(pdf_doc.l_margin)
                 pdf_doc.multi_cell(0, 5, stripped)
 
-        pdf_bytes = bytes(pdf_doc.output())
-        jd_title = result.job_description.title or "tailored"
-        filename = slugify(f"resume-{jd_title}")[:60] + ".pdf"
+        return bytes(pdf_doc.output())
 
-        response = HttpResponse(pdf_bytes, content_type="application/pdf")
-        response["Content-Length"] = len(pdf_bytes)
+
+class ResumeRewriteDOCXView(APIView):
+    """Download the rewritten resume as a DOCX preserving original formatting."""
+
+    def get(self, request, pk):
+        result = get_object_or_404(
+            AnalysisResult, id=pk, resume__user=request.user,
+        )
+
+        if not result.rewritten_resume_json:
+            return Response(
+                {"detail": "No structured rewrite available."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        docx_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        if result.resume.mime_type != docx_mime:
+            return Response(
+                {"detail": "Original resume was not a DOCX file. Use the PDF download instead."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from .docx_rewriter import rewrite_docx_preserving_format
+
+        result.resume.file.open("rb")
+        try:
+            docx_bytes = rewrite_docx_preserving_format(
+                result.resume.file, result.rewritten_resume_json,
+            )
+        finally:
+            result.resume.file.close()
+
+        jd_title = result.job_description.title or "tailored"
+        filename = slugify(f"resume-{jd_title}")[:60] + ".docx"
+
+        response = HttpResponse(docx_bytes, content_type=docx_mime)
+        response["Content-Length"] = len(docx_bytes)
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 

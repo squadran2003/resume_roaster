@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: letter;
+    margin: 0.6in 0.7in;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #222;
+  }
+  .name {
+    font-size: 22pt;
+    font-weight: 700;
+    text-align: center;
+    color: #1a1a2e;
+    margin-bottom: 2pt;
+  }
+  .contact {
+    text-align: center;
+    font-size: 9pt;
+    color: #555;
+    margin-bottom: 14pt;
+  }
+  .contact span { white-space: nowrap; }
+  .contact .sep { margin: 0 6px; color: #bbb; }
+  .summary {
+    margin-bottom: 12pt;
+    font-size: 10pt;
+    color: #333;
+  }
+  .section {
+    margin-bottom: 10pt;
+    page-break-inside: avoid;
+  }
+  .section-title {
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #1a1a2e;
+    letter-spacing: 0.5pt;
+    border-bottom: 1.5pt solid #E64A19;
+    padding-bottom: 2pt;
+    margin-bottom: 6pt;
+  }
+  .entry {
+    margin-bottom: 6pt;
+  }
+  .entry-heading {
+    font-weight: 700;
+    font-size: 10pt;
+    color: #1a1a2e;
+  }
+  .entry-subheading {
+    font-size: 9pt;
+    color: #666;
+    margin-bottom: 3pt;
+  }
+  .bullets {
+    list-style: none;
+    padding-left: 0;
+  }
+  .bullets li {
+    padding-left: 12pt;
+    text-indent: -10pt;
+    margin-bottom: 2pt;
+    font-size: 10pt;
+  }
+  .bullets li::before {
+    content: "\2022";
+    color: #E64A19;
+    font-weight: bold;
+    margin-right: 6pt;
+  }
+</style>
+</head>
+<body>
+
+<div class="name">{{ name }}</div>
+
+{% if contact_parts %}
+<div class="contact">
+  {% for part in contact_parts %}
+    <span>{{ part }}</span>{% if not forloop.last %}<span class="sep">|</span>{% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if summary %}
+<div class="summary">{{ summary }}</div>
+{% endif %}
+
+{% for section in sections %}
+<div class="section">
+  <div class="section-title">{{ section.title }}</div>
+  {% for entry in section.entries %}
+  <div class="entry">
+    {% if entry.heading %}<div class="entry-heading">{{ entry.heading }}</div>{% endif %}
+    {% if entry.subheading %}<div class="entry-subheading">{{ entry.subheading }}</div>{% endif %}
+    {% if entry.bullets %}
+    <ul class="bullets">
+      {% for bullet in entry.bullets %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+</body>
+</html>

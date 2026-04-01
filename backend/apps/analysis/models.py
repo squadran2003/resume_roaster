@@ -61,6 +61,10 @@ class AnalysisResult(models.Model):
         blank=True,
         help_text="Full AI-rewritten resume content tailored to the JD",
     )
+    rewritten_resume_json = models.JSONField(
+        null=True, blank=True,
+        help_text='Structured rewrite: {"name", "contact", "summary", "sections": [...]}',
+    )
     interview_questions = models.JSONField(
         default=list, blank=True,
         help_text='[{"question": str, "why_asked": str, "answer_framework": str}]',
