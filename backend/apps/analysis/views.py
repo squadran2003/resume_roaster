@@ -333,14 +333,16 @@ class ResumeRewritePDFView(APIView):
         pdf_doc.set_auto_page_break(auto=True, margin=margin_bottom)
         pdf_doc.add_page()
 
-        body_line_h = body_size * line_height * 0.3528  # pt to mm
+        pt_to_mm = 0.3528
+        body_line_h = body_size * line_height * pt_to_mm
 
         # --- Name ---
         name = strip_unsupported(data.get("name", ""))
         if name:
             pdf_doc.set_font("Helvetica", "B", name_size)
             pdf_doc.set_text_color(*name_rgb)
-            pdf_doc.cell(0, name_size * 0.4, name, align=align_map.get(name_align, "C"),
+            pdf_doc.cell(0, name_size * 1.3 * pt_to_mm, name,
+                         align=align_map.get(name_align, "C"),
                          new_x="LMARGIN", new_y="NEXT")
             pdf_doc.ln(1)
 
@@ -349,10 +351,12 @@ class ResumeRewritePDFView(APIView):
         if contact_parts:
             pdf_doc.set_font("Helvetica", "", contact_size)
             pdf_doc.set_text_color(*contact_rgb)
-            contact_line = "  |  ".join(contact_parts)
-            pdf_doc.cell(0, contact_size * 0.4, contact_line,
-                         align=align_map.get(name_align, "C"),
-                         new_x="LMARGIN", new_y="NEXT")
+            contact_align = align_map.get(name_align, "C")
+            contact_line_h = contact_size * 1.4 * pt_to_mm
+            for part in contact_parts:
+                pdf_doc.cell(0, contact_line_h, part,
+                             align=contact_align,
+                             new_x="LMARGIN", new_y="NEXT")
             pdf_doc.ln(4)
 
         # --- Summary ---
@@ -370,7 +374,7 @@ class ResumeRewritePDFView(APIView):
                 pdf_doc.ln(2)
                 pdf_doc.set_font("Helvetica", "B", heading_size)
                 pdf_doc.set_text_color(*heading_rgb)
-                pdf_doc.cell(0, heading_size * 0.45, title.upper(),
+                pdf_doc.cell(0, heading_size * 1.3 * pt_to_mm, title.upper(),
                              new_x="LMARGIN", new_y="NEXT")
                 if heading_border:
                     pdf_doc.set_draw_color(*accent_rgb)
