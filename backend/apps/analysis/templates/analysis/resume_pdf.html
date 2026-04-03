@@ -5,46 +5,51 @@
 <style>
   @page {
     size: letter;
-    margin: 0.6in 0.7in;
+    margin: {{ styles.margin_top }} {{ styles.margin_right }} {{ styles.margin_bottom }} {{ styles.margin_left }};
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 10pt;
-    line-height: 1.4;
-    color: #222;
+    font-family: {{ styles.body_font }};
+    font-size: {{ styles.body_size }};
+    line-height: {{ styles.line_height }};
+    color: {{ styles.body_color }};
   }
   .name {
-    font-size: 22pt;
+    font-family: {{ styles.name_font }};
+    font-size: {{ styles.name_size }};
     font-weight: 700;
-    text-align: center;
-    color: #1a1a2e;
+    text-align: {{ styles.name_align }};
+    color: {{ styles.name_color }};
     margin-bottom: 2pt;
   }
   .contact {
-    text-align: center;
-    font-size: 9pt;
-    color: #555;
+    text-align: {{ styles.name_align }};
+    font-family: {{ styles.contact_font }};
+    font-size: {{ styles.contact_size }};
+    color: {{ styles.contact_color }};
     margin-bottom: 14pt;
   }
   .contact span { white-space: nowrap; }
   .contact .sep { margin: 0 6px; color: #bbb; }
   .summary {
     margin-bottom: 12pt;
-    font-size: 10pt;
-    color: #333;
+    font-size: {{ styles.body_size }};
+    color: {{ styles.body_color }};
   }
   .section {
     margin-bottom: 10pt;
     page-break-inside: avoid;
   }
   .section-title {
-    font-size: 11pt;
+    font-family: {{ styles.heading_font }};
+    font-size: {{ styles.heading_size }};
     font-weight: 700;
     text-transform: uppercase;
-    color: #1a1a2e;
+    color: {{ styles.heading_color }};
     letter-spacing: 0.5pt;
-    border-bottom: 1.5pt solid #E64A19;
+    {% if styles.heading_border %}
+    border-bottom: 1.5pt solid {{ styles.accent_color }};
+    {% endif %}
     padding-bottom: 2pt;
     margin-bottom: 6pt;
   }
@@ -53,12 +58,12 @@
   }
   .entry-heading {
     font-weight: 700;
-    font-size: 10pt;
-    color: #1a1a2e;
+    font-size: {{ styles.body_size }};
+    color: {{ styles.heading_color }};
   }
   .entry-subheading {
-    font-size: 9pt;
-    color: #666;
+    font-size: {{ styles.contact_size }};
+    color: {{ styles.subheading_color }};
     margin-bottom: 3pt;
   }
   .bullets {
@@ -69,11 +74,11 @@
     padding-left: 12pt;
     text-indent: -10pt;
     margin-bottom: 2pt;
-    font-size: 10pt;
+    font-size: {{ styles.body_size }};
   }
   .bullets li::before {
     content: "\2022";
-    color: #E64A19;
+    color: {{ styles.bullet_color }};
     font-weight: bold;
     margin-right: 6pt;
   }

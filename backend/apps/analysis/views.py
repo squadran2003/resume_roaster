@@ -236,9 +236,12 @@ class ResumeRewritePDFView(APIView):
         jd_title = result.job_description.title or "tailored"
         filename = slugify(f"resume-{jd_title}")[:60] + ".pdf"
 
+        # Extract styles from the original resume to match its look
+        styles = self._extract_original_styles(result.resume)
+
         # Use structured JSON path (new rewrites) or fall back to legacy FPDF
         if result.rewritten_resume_json:
-            pdf_bytes = self._render_weasyprint(result.rewritten_resume_json)
+            pdf_bytes = self._render_weasyprint(result.rewritten_resume_json, styles)
         else:
             pdf_bytes = self._render_fpdf_legacy(result.rewritten_resume_text)
 
@@ -247,9 +250,37 @@ class ResumeRewritePDFView(APIView):
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
-    def _render_weasyprint(self, data):
+    @staticmethod
+    def _extract_original_styles(resume):
+        """Extract visual styles from the original uploaded resume."""
+        from .style_extractor import (
+            default_styles,
+            extract_styles_from_docx,
+            extract_styles_from_pdf,
+        )
+
+        docx_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        try:
+            resume.file.open("rb")
+            try:
+                if resume.mime_type == docx_mime:
+                    return extract_styles_from_docx(resume.file)
+                else:
+                    return extract_styles_from_pdf(resume.file)
+            finally:
+                resume.file.close()
+        except Exception:
+            logger.exception("Could not extract styles from original resume")
+            return default_styles()
+
+    def _render_weasyprint(self, data, styles=None):
         from django.template.loader import render_to_string
         from weasyprint import HTML
+
+        from .style_extractor import default_styles
+
+        if styles is None:
+            styles = default_styles()
 
         contact_parts = [p.strip() for p in (data.get("contact") or "").split("|") if p.strip()]
         context = {
@@ -257,6 +288,7 @@ class ResumeRewritePDFView(APIView):
             "contact_parts": contact_parts,
             "summary": data.get("summary", ""),
             "sections": data.get("sections", []),
+            "styles": styles,
         }
         html_string = render_to_string("analysis/resume_pdf.html", context)
         return HTML(string=html_string).write_pdf()

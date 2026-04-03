@@ -65,6 +65,7 @@ pydantic_core==2.41.5
 pydyf==0.12.1
 Pygments==2.19.2
 PyJWT==2.11.0
+PyMuPDF==1.25.5
 pypdf==4.3.1
 pyphen==0.17.2
 pytest==9.0.2
