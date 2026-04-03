@@ -220,7 +220,7 @@ class ResumeRewriteView(APIView):
 
 
 class ResumeRewritePDFView(APIView):
-    """Download the rewritten resume as a formatted PDF using WeasyPrint."""
+    """Download the rewritten resume as a formatted PDF."""
 
     def get(self, request, pk):
         result = get_object_or_404(
@@ -274,24 +274,145 @@ class ResumeRewritePDFView(APIView):
             return default_styles()
 
     def _render_weasyprint(self, data, styles=None):
-        from django.template.loader import render_to_string
-        from weasyprint import HTML
+        """Render structured resume JSON to PDF using fpdf2 (no system deps)."""
+        import re
+
+        from fpdf import FPDF
 
         from .style_extractor import default_styles
 
         if styles is None:
             styles = default_styles()
 
-        contact_parts = [p.strip() for p in (data.get("contact") or "").split("|") if p.strip()]
-        context = {
-            "name": data.get("name", ""),
-            "contact_parts": contact_parts,
-            "summary": data.get("summary", ""),
-            "sections": data.get("sections", []),
-            "styles": styles,
-        }
-        html_string = render_to_string("analysis/resume_pdf.html", context)
-        return HTML(string=html_string).write_pdf()
+        def strip_unsupported(t):
+            return re.sub(r'[^\x00-\xFF]', '', t).strip()
+
+        def parse_pt(val):
+            """Extract numeric pt value from strings like '10pt' or '0.7in'."""
+            if isinstance(val, (int, float)):
+                return float(val)
+            m = re.match(r'([\d.]+)\s*(pt|in)?', str(val))
+            if not m:
+                return 10.0
+            num = float(m.group(1))
+            unit = m.group(2) or 'pt'
+            if unit == 'in':
+                return num * 72  # convert inches to points
+            return num
+
+        def hex_to_rgb(h):
+            h = h.lstrip('#')
+            if len(h) == 6:
+                return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            return 34, 34, 34
+
+        # Parse style values
+        name_size = parse_pt(styles.get("name_size", "22pt"))
+        heading_size = parse_pt(styles.get("heading_size", "11pt"))
+        body_size = parse_pt(styles.get("body_size", "10pt"))
+        contact_size = parse_pt(styles.get("contact_size", "9pt"))
+        margin_top = parse_pt(styles.get("margin_top", "0.6in")) / 72 * 25.4  # to mm
+        margin_right = parse_pt(styles.get("margin_right", "0.7in")) / 72 * 25.4
+        margin_bottom = parse_pt(styles.get("margin_bottom", "0.6in")) / 72 * 25.4
+        margin_left = parse_pt(styles.get("margin_left", "0.7in")) / 72 * 25.4
+        line_height = float(styles.get("line_height", "1.35"))
+
+        name_rgb = hex_to_rgb(styles.get("name_color", "#1a1a2e"))
+        heading_rgb = hex_to_rgb(styles.get("heading_color", "#1a1a2e"))
+        body_rgb = hex_to_rgb(styles.get("body_color", "#222222"))
+        contact_rgb = hex_to_rgb(styles.get("contact_color", "#555555"))
+        accent_rgb = hex_to_rgb(styles.get("accent_color", "#1a1a2e"))
+        subheading_rgb = hex_to_rgb(styles.get("subheading_color", "#555555"))
+
+        heading_border = styles.get("heading_border", True)
+        name_align = styles.get("name_align", "center")
+        align_map = {"center": "C", "left": "L", "right": "R"}
+
+        pdf_doc = FPDF()
+        pdf_doc.set_margins(left=margin_left, top=margin_top, right=margin_right)
+        pdf_doc.set_auto_page_break(auto=True, margin=margin_bottom)
+        pdf_doc.add_page()
+
+        body_line_h = body_size * line_height * 0.3528  # pt to mm
+
+        # --- Name ---
+        name = strip_unsupported(data.get("name", ""))
+        if name:
+            pdf_doc.set_font("Helvetica", "B", name_size)
+            pdf_doc.set_text_color(*name_rgb)
+            pdf_doc.cell(0, name_size * 0.4, name, align=align_map.get(name_align, "C"),
+                         new_x="LMARGIN", new_y="NEXT")
+            pdf_doc.ln(1)
+
+        # --- Contact ---
+        contact_parts = [strip_unsupported(p) for p in (data.get("contact") or "").split("|") if p.strip()]
+        if contact_parts:
+            pdf_doc.set_font("Helvetica", "", contact_size)
+            pdf_doc.set_text_color(*contact_rgb)
+            contact_line = "  |  ".join(contact_parts)
+            pdf_doc.cell(0, contact_size * 0.4, contact_line,
+                         align=align_map.get(name_align, "C"),
+                         new_x="LMARGIN", new_y="NEXT")
+            pdf_doc.ln(4)
+
+        # --- Summary ---
+        summary = strip_unsupported(data.get("summary", ""))
+        if summary:
+            pdf_doc.set_font("Helvetica", "", body_size)
+            pdf_doc.set_text_color(*body_rgb)
+            pdf_doc.multi_cell(0, body_line_h, summary)
+            pdf_doc.ln(3)
+
+        # --- Sections ---
+        for section in data.get("sections", []):
+            title = strip_unsupported(section.get("title", ""))
+            if title:
+                pdf_doc.ln(2)
+                pdf_doc.set_font("Helvetica", "B", heading_size)
+                pdf_doc.set_text_color(*heading_rgb)
+                pdf_doc.cell(0, heading_size * 0.45, title.upper(),
+                             new_x="LMARGIN", new_y="NEXT")
+                if heading_border:
+                    pdf_doc.set_draw_color(*accent_rgb)
+                    pdf_doc.set_line_width(0.4)
+                    y = pdf_doc.get_y()
+                    pdf_doc.line(pdf_doc.l_margin, y,
+                                 pdf_doc.w - pdf_doc.r_margin, y)
+                pdf_doc.ln(2)
+
+            for entry in section.get("entries", []):
+                heading = strip_unsupported(entry.get("heading", ""))
+                if heading:
+                    pdf_doc.set_font("Helvetica", "B", body_size)
+                    pdf_doc.set_text_color(*heading_rgb)
+                    pdf_doc.cell(0, body_line_h, heading,
+                                 new_x="LMARGIN", new_y="NEXT")
+
+                subheading = strip_unsupported(entry.get("subheading", ""))
+                if subheading:
+                    pdf_doc.set_font("Helvetica", "I", max(8, body_size - 1))
+                    pdf_doc.set_text_color(*subheading_rgb)
+                    pdf_doc.cell(0, body_line_h, subheading,
+                                 new_x="LMARGIN", new_y="NEXT")
+
+                bullets = entry.get("bullets", [])
+                if bullets:
+                    pdf_doc.set_font("Helvetica", "", body_size)
+                    pdf_doc.set_text_color(*body_rgb)
+                    for bullet in bullets:
+                        cleaned = strip_unsupported(bullet)
+                        if not cleaned:
+                            continue
+                        pdf_doc.set_x(pdf_doc.l_margin + 4)
+                        pdf_doc.multi_cell(
+                            pdf_doc.w - pdf_doc.l_margin - pdf_doc.r_margin - 4,
+                            body_line_h,
+                            f"- {cleaned}",
+                        )
+
+                pdf_doc.ln(2)
+
+        return bytes(pdf_doc.output())
 
     def _render_fpdf_legacy(self, text):
         """Fallback for old rewrites that only have plain text."""
