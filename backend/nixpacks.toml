@@ -2,4 +2,4 @@
 nixPkgs = ["python312", "pango", "gobject-introspection", "gdk-pixbuf", "libffi", "harfbuzz", "fontconfig", "freetype", "dejavu_fonts"]
 
 [phases.install]
-cmds = ["pip install -r requirements/prod.txt"]
+cmds = ["python -m venv /app/.venv && /app/.venv/bin/pip install -r requirements/prod.txt"]
