@@ -6,11 +6,6 @@ if [ -d /app/.venv/bin ]; then
     export PATH="/app/.venv/bin:$PATH"
 fi
 
-# Debug: confirm gunicorn is findable
-echo "PATH=$PATH"
-echo "which python: $(which python)"
-echo "pip list gunicorn: $(pip list 2>/dev/null | grep -i gunicorn || echo 'NOT FOUND')"
-
 if [ "$SERVICE_TYPE" = "worker" ]; then
     echo "Starting Celery worker..."
     exec celery -A config.celery worker --loglevel=info --concurrency=2
