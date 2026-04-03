@@ -1,10 +1,15 @@
 #!/bin/bash
 set -e
 
-# Activate venv if it exists (Railway/Nixpacks)
-if [ -f /app/.venv/bin/activate ]; then
-    source /app/.venv/bin/activate
+# Use venv binaries directly if they exist (Railway/Nixpacks)
+if [ -d /app/.venv/bin ]; then
+    export PATH="/app/.venv/bin:$PATH"
 fi
+
+# Debug: confirm gunicorn is findable
+echo "PATH=$PATH"
+echo "which python: $(which python)"
+echo "pip list gunicorn: $(pip list 2>/dev/null | grep -i gunicorn || echo 'NOT FOUND')"
 
 if [ "$SERVICE_TYPE" = "worker" ]; then
     echo "Starting Celery worker..."
