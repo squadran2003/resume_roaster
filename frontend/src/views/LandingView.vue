@@ -170,26 +170,6 @@
           </v-col>
         </v-row>
 
-        <!-- Testimonials -->
-        <v-row justify="center">
-          <v-col cols="12" sm="6" md="4" v-for="testimonial in testimonials" :key="testimonial.name">
-            <v-card elevation="0" class="pa-5 testimonial-card h-100">
-              <div class="d-flex align-center mb-3">
-                <v-avatar color="primary" size="40" class="mr-3">
-                  <span class="text-white font-weight-bold">{{ testimonial.initials }}</span>
-                </v-avatar>
-                <div>
-                  <div class="text-body-1 font-weight-bold">{{ testimonial.name }}</div>
-                  <div class="text-body-2 text-medium-emphasis">{{ testimonial.role }}</div>
-                </div>
-              </div>
-              <div class="d-flex mb-2">
-                <v-icon v-for="n in 5" :key="n" size="16" color="amber-darken-2">mdi-star</v-icon>
-              </div>
-              <p class="text-body-2 text-medium-emphasis mb-0">"{{ testimonial.quote }}"</p>
-            </v-card>
-          </v-col>
-        </v-row>
       </v-container>
     </section>
 
@@ -366,26 +346,6 @@ const socialStats = [
   { value: '4.8/5', label: 'User rating' },
 ]
 
-const testimonials = [
-  {
-    name: 'Sarah M.',
-    initials: 'SM',
-    role: 'Marketing Manager',
-    quote: 'I went from getting ghosted to landing 3 interviews in a week. The keyword heatmap showed me exactly what I was missing.',
-  },
-  {
-    name: 'James K.',
-    initials: 'JK',
-    role: 'Software Engineer',
-    quote: 'The AI rewrite turned my generic bullets into quantified achievements. Got an offer at my target company within a month.',
-  },
-  {
-    name: 'Priya R.',
-    initials: 'PR',
-    role: 'Recent Graduate',
-    quote: 'As a new grad, I had no idea my resume was failing ATS scans. Resume Roaster found 12 issues I never would have caught.',
-  },
-]
 
 const steps = [
   {
@@ -539,16 +499,6 @@ const steps = [
 .sample-card {
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   box-shadow: 0 0 60px rgba(230, 74, 25, 0.06) !important;
-}
-
-/* Testimonials */
-.testimonial-card {
-  border: 1px solid rgba(0, 0, 0, 0.06) !important;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-}
-.testimonial-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* CTA */
