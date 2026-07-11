@@ -32,7 +32,14 @@ export default defineConfig({
     script: 'async',
     formatting: 'minify',
     includedRoutes() {
-      return ['/', '/login', '/register']
+      return [
+        '/',
+        '/login',
+        '/register',
+        '/ats-resume-checker',
+        '/cover-letter-generator',
+        '/resume-keyword-scanner',
+      ]
     },
   },
 })

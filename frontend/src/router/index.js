@@ -24,6 +24,22 @@ export const routes = [
     component: () => import('../views/ShareView.vue'),
     meta: { public: true },
   },
+  // SEO landing pages (prerendered, viewable by everyone)
+  {
+    path: '/ats-resume-checker',
+    component: () => import('../views/AtsCheckerView.vue'),
+    meta: { public: true },
+  },
+  {
+    path: '/cover-letter-generator',
+    component: () => import('../views/CoverLetterView.vue'),
+    meta: { public: true },
+  },
+  {
+    path: '/resume-keyword-scanner',
+    component: () => import('../views/KeywordScannerView.vue'),
+    meta: { public: true },
+  },
   { path: '/dashboard', component: () => import('../views/DashboardView.vue') },
   { path: '/upload', component: () => import('../views/UploadResumeView.vue') },
   { path: '/analysis/new', component: () => import('../views/NewAnalysisView.vue') },

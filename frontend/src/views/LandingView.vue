@@ -193,8 +193,14 @@
     </section>
 
     <!-- Footer -->
-    <v-footer class="bg-surface py-6">
+    <v-footer class="bg-surface py-8">
       <v-container>
+        <div class="d-flex flex-wrap justify-center mb-6" style="gap: 8px 24px;">
+          <router-link to="/ats-resume-checker" class="text-decoration-none text-medium-emphasis text-body-2">ATS Resume Checker</router-link>
+          <router-link to="/resume-keyword-scanner" class="text-decoration-none text-medium-emphasis text-body-2">Resume Keyword Scanner</router-link>
+          <router-link to="/cover-letter-generator" class="text-decoration-none text-medium-emphasis text-body-2">Cover Letter Generator</router-link>
+        </div>
+        <v-divider class="mb-6" />
         <div class="d-flex flex-wrap justify-space-between align-center gap-4">
           <div class="d-flex align-center" style="gap: 8px;">
             <v-icon icon="mdi-fire" color="primary" size="22" />
@@ -228,8 +234,6 @@ useHead({
     { property: 'og:image', content: 'https://resume-roaster.com/resume-roaster.png' },
     { property: 'og:image:width', content: '1200' },
     { property: 'og:image:height', content: '630' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:image', content: 'https://resume-roaster.com/resume-roaster.png' },
   ],
   link: [
     { rel: 'canonical', href: 'https://resume-roaster.com/' },
