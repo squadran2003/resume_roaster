@@ -8,4 +8,6 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx serve -s dist --listen tcp://0.0.0.0:$PORT"
+# No -s: dist/serve.json rewrites only client routes to index.html so the
+# prerendered marketing/auth pages serve as real static HTML.
+cmd = "npx serve dist --listen tcp://0.0.0.0:$PORT"

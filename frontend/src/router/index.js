@@ -1,7 +1,9 @@
-import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-const routes = [
+// Route table. The router instance itself is created by ViteSSG (see main.js),
+// which selects memory history during static prerender and web history in the
+// browser. We only export the routes + guard setup here.
+export const routes = [
   {
     path: '/',
     component: () => import('../views/LandingView.vue'),
@@ -31,19 +33,14 @@ const routes = [
   { path: '/account', component: () => import('../views/AccountView.vue') },
 ]
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
-})
-
-router.beforeEach((to) => {
-  const auth = useAuthStore()
-  if (!to.meta.public && !auth.isAuthenticated) {
-    return '/login'
-  }
-  if (to.meta.guestOnly && auth.isAuthenticated) {
-    return '/dashboard'
-  }
-})
-
-export default router
+export function setupRouterGuards(router) {
+  router.beforeEach((to) => {
+    const auth = useAuthStore()
+    if (!to.meta.public && !auth.isAuthenticated) {
+      return '/login'
+    }
+    if (to.meta.guestOnly && auth.isAuthenticated) {
+      return '/dashboard'
+    }
+  })
+}

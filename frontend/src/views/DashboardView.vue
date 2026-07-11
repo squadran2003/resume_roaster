@@ -112,7 +112,7 @@
       <v-btn
         v-if="compareIds.length === 2"
         size="small"
-        color="secondary"
+        color="primary"
         variant="tonal"
         prepend-icon="mdi-compare"
         :to="`/analysis/compare?ids=${compareIds.join(',')}`"

@@ -11,4 +11,6 @@ FROM node:20-alpine
 WORKDIR /app
 RUN npm install -g serve
 COPY --from=build /app/dist ./dist
-CMD ["sh", "-c", "serve -s dist --listen tcp://0.0.0.0:$PORT"]
+# No -s: dist/serve.json rewrites only client routes to index.html, so the
+# prerendered /, /login, /register pages are served as real static HTML.
+CMD ["sh", "-c", "serve dist --listen tcp://0.0.0.0:$PORT"]

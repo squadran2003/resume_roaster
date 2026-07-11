@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/index.html" },
+    { "source": "/upload", "destination": "/index.html" },
+    { "source": "/analysis/**", "destination": "/index.html" },
+    { "source": "/linkedin", "destination": "/index.html" },
+    { "source": "/account", "destination": "/index.html" },
+    { "source": "/share/**", "destination": "/index.html" }
+  ]
+}

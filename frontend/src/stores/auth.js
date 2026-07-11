@@ -2,8 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '../api/auth'
 
+const isBrowser = typeof window !== 'undefined'
+
 export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref(localStorage.getItem('access_token'))
+  // Guard localStorage: this store is instantiated during static prerender (Node),
+  // where browser globals are unavailable.
+  const accessToken = ref(isBrowser ? localStorage.getItem('access_token') : null)
   const user = ref(null)
 
   const isAuthenticated = computed(() => !!accessToken.value)
